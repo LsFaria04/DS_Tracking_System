@@ -1,0 +1,46 @@
+services:
+
+  postgres:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: safePassword
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4:9.9
+    environment:
+      PGADMIN_DEFAULT_EMAIL: fakemail@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: safePassword
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "4321:80"
+    depends_on:
+      - postgres
+  
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_USER: admin
+      DB_PASS: safePassword
+      DB_NAME: postgres
+      DB_PORT: 5432
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app
+        - action: rebuild
+          path: ./src/go.mod
+        - action: rebuild
+          path: ./src/go.sum
+    depends_on: 
+      - postgres
