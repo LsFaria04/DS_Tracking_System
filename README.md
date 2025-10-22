@@ -26,3 +26,83 @@ docker compose -f compose.dev.yml up --watch
 To run the production Compose and Dockerfile (i.e., the ones without the .dev suffix), make sure to create a .env file containing the required environment variables. Place this file in the same directory as your Compose configuration to ensure proper loading.
 
 **DO NOT COMMIT THE .ENV FILE!**
+
+## Terraform Deployment to GCP
+
+### Prerequisites
+1. Install [Terraform](https://www.terraform.io/downloads)
+2. Install and authenticate [gcloud CLI](https://cloud.google.com/sdk/docs/install)
+
+### Setup
+
+```shell
+# Authenticate with GCP
+gcloud auth application-default login
+gcloud config set project madeinportugal
+
+# Navigate to terraform directory
+cd backend/terraform
+
+# Initialize Terraform (first time only)
+terraform init
+```
+
+### Deploy to GCP
+
+```shell
+# Build and push Docker image
+cd backend
+docker build -f Dockerfile -t returnedft/tracking-status:test .
+docker push returnedft/tracking-status:test
+
+# Deploy Cloud SQL + Cloud Run
+cd terraform
+terraform apply
+```
+
+Takes 10-15 minutes. Type `yes` when prompted.
+
+### Stop Resources (Stop Charges)
+
+```shell
+cd backend/terraform
+terraform destroy
+```
+
+Type `yes` when prompted.
+
+**Important**: `terraform destroy` deletes:
+- Cloud SQL instance (including all data)
+- Cloud Run service
+- All associated resources
+
+This action is irreversible but stops all charges immediately.
+
+### Daily Workflow
+
+```shell
+# Morning: Deploy for testing
+cd backend/terraform
+terraform apply
+
+# Evening: Destroy to save credits
+terraform destroy
+```
+
+### Troubleshooting
+
+**Enable required APIs:**
+```shell
+gcloud services enable sqladmin.googleapis.com
+gcloud services enable run.googleapis.com
+```
+
+**View Cloud Run logs:**
+```shell
+gcloud run services logs read tracking-status --region=europe-west1 --project=madeinportugal
+```
+
+**Check Cloud SQL status:**
+```shell
+gcloud sql instances describe tracking-status --project=madeinportugal
+``` 
