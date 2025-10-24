@@ -2,12 +2,23 @@
 
 The tracking system backend is developed using the Go programing language
 
+## Quick Start
+
 To start developing use the following command to create the docker containers:
 
 ```shell
-#Use the dev composer file to start postgres, pgadmin and the go containers
+# Use the dev composer file to start postgres, pgadmin and the go containers
+cd backend
 docker compose -f compose.dev.yml up --watch
 ```
+
+The database schema will be automatically initialized on first run.
+
+### Accessing Services
+
+- **Backend API**: http://localhost:8080
+- **PgAdmin**: http://localhost:4321 (email: fakemail@gmail.com, password: safePassword)
+- **PostgreSQL**: localhost:5432
 
 To stop the containers and remove them use:
 

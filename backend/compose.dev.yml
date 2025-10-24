@@ -8,6 +8,9 @@ services:
       POSTGRES_PASSWORD: safePassword
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d
 
   pgadmin:
     image: dpage/pgadmin4:9.9
@@ -44,3 +47,6 @@ services:
           path: ./src/go.sum
     depends_on: 
       - postgres
+
+volumes:
+  postgres_data:
