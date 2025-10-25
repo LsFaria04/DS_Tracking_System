@@ -1,3 +1,46 @@
+# Google Cloud Storage Bucket for Blockchain Persistence
+
+resource "google_storage_bucket" "blockchain_storage" {
+  name          = "${var.blockchain_bucket_name}-${var.project_id}"
+  location      = var.region
+  force_destroy = false # Protect blockchain data from accidental deletion
+
+  uniform_bucket_level_access = true
+
+  versioning {
+    enabled = true # Keep version history of blockchain snapshots
+  }
+
+  lifecycle_rule {
+    condition {
+      age = 90 # Archive old versions after 90 days
+    }
+    action {
+      type          = "SetStorageClass"
+      storage_class = "NEARLINE"
+    }
+  }
+
+  labels = {
+    environment = var.environment
+    purpose     = "blockchain-storage"
+  }
+}
+
+# Service account for Cloud Run to access blockchain storage
+resource "google_service_account" "cloudrun_sa" {
+  account_id   = "${var.service_name}-sa"
+  display_name = "Service Account for ${var.service_name}"
+  description  = "Service account for Cloud Run to access Cloud Storage and Cloud SQL"
+}
+
+# Grant Cloud Storage access to service account
+resource "google_storage_bucket_iam_member" "blockchain_storage_access" {
+  bucket = google_storage_bucket.blockchain_storage.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.cloudrun_sa.email}"
+}
+
 # Cloud SQL PostgreSQL Instance
 resource "google_sql_database_instance" "postgres" {
   name             = var.db_instance_name
@@ -42,9 +85,12 @@ resource "google_cloud_run_v2_service" "default" {
   location = var.region
 
   template {
+    service_account = google_service_account.cloudrun_sa.email
+
     containers {
       image = var.docker_image
 
+      # Database Configuration
       env {
         name  = "DB_HOST"
         value = google_sql_database_instance.postgres.public_ip_address
@@ -65,6 +111,51 @@ resource "google_cloud_run_v2_service" "default" {
         name  = "DB_PORT"
         value = "5432"
       }
+
+      # Blockchain Configuration
+      env {
+        name  = "BLOCKCHAIN_STORAGE_BUCKET"
+        value = google_storage_bucket.blockchain_storage.name
+      }
+      env {
+        name  = "BLOCKCHAIN_STORAGE_PATH"
+        value = "blockchain/chain.json"
+      }
+      env {
+        name  = "BLOCKCHAIN_DIFFICULTY"
+        value = tostring(var.blockchain_difficulty)
+      }
+      env {
+        name  = "BLOCKCHAIN_BACKUP_ENABLED"
+        value = "true"
+      }
+      env {
+        name  = "BLOCKCHAIN_BACKUP_INTERVAL"
+        value = "300" # Backup every 5 minutes
+      }
+
+      # Application Configuration
+      env {
+        name  = "ENVIRONMENT"
+        value = var.environment
+      }
+      env {
+        name  = "GCP_PROJECT_ID"
+        value = var.project_id
+      }
+
+      # Resource limits
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
+    }
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 10
     }
   }
 }
@@ -91,4 +182,32 @@ output "db_connection_name" {
 output "db_public_ip" {
   description = "Database public IP address used by Cloud Run."
   value       = google_sql_database_instance.postgres.public_ip_address
+}
+
+output "blockchain_bucket_name" {
+  description = "Name of the Cloud Storage bucket for blockchain data."
+  value       = google_storage_bucket.blockchain_storage.name
+}
+
+output "blockchain_bucket_url" {
+  description = "URL of the blockchain storage bucket."
+  value       = google_storage_bucket.blockchain_storage.url
+}
+
+output "service_account_email" {
+  description = "Email of the service account used by Cloud Run."
+  value       = google_service_account.cloudrun_sa.email
+}
+
+output "environment_variables" {
+  description = "Environment variables configured for the service."
+  value = {
+    DB_HOST                    = google_sql_database_instance.postgres.public_ip_address
+    DB_PORT                    = "5432"
+    DB_NAME                    = var.db_name
+    BLOCKCHAIN_STORAGE_BUCKET  = google_storage_bucket.blockchain_storage.name
+    BLOCKCHAIN_DIFFICULTY      = var.blockchain_difficulty
+    ENVIRONMENT                = var.environment
+  }
+  sensitive = false
 }

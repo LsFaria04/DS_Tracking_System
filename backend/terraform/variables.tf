@@ -44,3 +44,26 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
+
+variable "blockchain_bucket_name" {
+  description = "Name for the Google Cloud Storage bucket to store blockchain data. Must be globally unique."
+  type        = string
+  default     = "tracking-blockchain-storage"
+}
+
+variable "environment" {
+  description = "Environment name (development, staging, production)"
+  type        = string
+  default     = "production"
+}
+
+variable "blockchain_difficulty" {
+  description = "Blockchain mining difficulty level (1-5). Higher = more secure but slower."
+  type        = number
+  default     = 2
+  
+  validation {
+    condition     = var.blockchain_difficulty >= 1 && var.blockchain_difficulty <= 5
+    error_message = "Blockchain difficulty must be between 1 and 5."
+  }
+}

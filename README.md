@@ -1,6 +1,6 @@
-# Tracking system backend
+# Order Tracking System
 
-The tracking system backend is developed using the Go programing language
+Backend developed with Go, frontend with Next.js, deployed on Google Cloud Platform.
 
 ## Quick Start
 
@@ -38,7 +38,7 @@ To run the production Compose and Dockerfile (i.e., the ones without the .dev su
 
 **DO NOT COMMIT THE .ENV FILE!**
 
-# Tracking system frontend
+## Tracking system frontend
 
 ## Quick Start
 
@@ -74,6 +74,18 @@ docker compose -f compose.dev.yml down
 1. Install [Terraform](https://www.terraform.io/downloads)
 2. Install and authenticate [gcloud CLI](https://cloud.google.com/sdk/docs/install)
 
+### Configuration
+
+Terraform manages environment variables automatically. For local development, edit `backend/.env`:
+
+```bash
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=tracking_user
+DB_PASS=change_me
+DB_NAME=tracking_db
+```
+
 ### Setup
 
 ```shell
@@ -81,8 +93,17 @@ docker compose -f compose.dev.yml down
 gcloud auth application-default login
 gcloud config set project madeinportugal
 
+# Enable required APIs
+gcloud services enable cloudrun.googleapis.com
+gcloud services enable sqladmin.googleapis.com
+gcloud services enable storage.googleapis.com
+
 # Navigate to terraform directory
 cd backend/terraform
+
+# Create configuration file
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your project_id, db_password, etc.
 
 # Initialize Terraform (first time only)
 terraform init
@@ -102,6 +123,11 @@ terraform apply
 ```
 
 Takes 10-15 minutes. Type `yes` when prompted.
+
+Get your service URL:
+```shell
+terraform output service_url
+```
 
 ### Stop Resources (Stop Charges)
 
@@ -130,20 +156,78 @@ terraform apply
 terraform destroy
 ```
 
+### View Logs
+
+```shell
+gcloud run services logs read tracking-status --region=europe-west1
+```
+
 ### Troubleshooting
-
-**Enable required APIs:**
-```shell
-gcloud services enable sqladmin.googleapis.com
-gcloud services enable run.googleapis.com
-```
-
-**View Cloud Run logs:**
-```shell
-gcloud run services logs read tracking-status --region=europe-west1 --project=madeinportugal
-```
 
 **Check Cloud SQL status:**
 ```shell
-gcloud sql instances describe tracking-status --project=madeinportugal
-``` 
+gcloud sql instances describe tracking-db
+```
+
+**Check Cloud Run status:**
+```shell
+gcloud run services describe tracking-status --region=europe-west1
+```
+
+**If APIs aren't enabled:**
+```shell
+gcloud services enable cloudrun.googleapis.com sqladmin.googleapis.com storage.googleapis.com
+```
+
+## Blockchain Features
+
+The system includes blockchain integration for immutable order tracking.
+
+API Endpoints:
+- `GET /api/v1/blockchain/status` - Blockchain statistics
+- `GET /api/v1/blockchain/validate` - Verify integrity
+- `GET /api/v1/blockchain/blocks` - View all blocks
+- `GET /api/v1/orders/:id/blockchain` - Order blockchain history
+
+Blockchain data is automatically backed up to Cloud Storage with version history.
+
+## GitHub Actions CI/CD
+
+Three automated workflows:
+- `test.yml` - Run tests on every PR
+- `terraform-plan.yml` - Preview infrastructure changes on PRs
+- `deploy.yml` - Auto-deploy to production on merge to main
+
+### Setup GitHub Actions
+
+1. Create service account:
+```shell
+gcloud iam service-accounts create terraform-ci --display-name="Terraform CI/CD"
+```
+
+2. Grant permissions:
+```shell
+PROJECT_ID=$(gcloud config get-value project)
+SA_EMAIL="terraform-ci@${PROJECT_ID}.iam.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/run.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/cloudsql.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/storage.admin"
+```
+
+3. Setup Workload Identity Federation and add GitHub Secrets:
+   - `GCP_WORKLOAD_IDENTITY_PROVIDER`
+   - `GCP_SERVICE_ACCOUNT`
+   - `GCP_PROJECT_ID`
+   - `DB_PASSWORD`
+   - `BLOCKCHAIN_BUCKET_NAME`
+
+See `.github/workflows/` for workflow details. 
