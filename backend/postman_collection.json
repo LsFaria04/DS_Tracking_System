@@ -1,0 +1,33 @@
+{
+  "info": {
+    "name": "MIPS Tracking Status API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "mips-tracking-status-collection"
+  },
+  "item": [
+    {
+      "name": "Root",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/",
+          "host": ["{{base_url}}"],
+          "path": [""]
+        }
+      }
+    },
+    {
+      "name": "Pong",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/pong",
+          "host": ["{{base_url}}"],
+          "path": ["pong"]
+        }
+      }
+    }
+  ]
+}
