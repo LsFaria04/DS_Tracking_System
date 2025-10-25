@@ -1,6 +1,7 @@
 package main
 
 import "github.com/gin-gonic/gin"
+import "github.com/gin-contrib/cors"
 import (
   "gorm.io/driver/postgres"
   "gorm.io/gorm"
@@ -8,7 +9,7 @@ import (
 
 import "os"
 import "fmt"
-
+import "time"
 
 
 func main() {
@@ -21,6 +22,20 @@ func main() {
   err = sqlDB.Ping()
 
   router := gin.Default()
+
+  // Configure CORS middleware
+  router.Use(cors.New(cors.Config{
+    AllowOrigins: []string{
+      "http://localhost:3000",
+      "https://production-url.com", // Add here the production url when deployed to GCP Cloud Run
+    },
+    AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+    AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
+    ExposeHeaders: []string{"Content-Length"},
+    AllowCredentials: true,
+    MaxAge: 12 * time.Hour,
+  }))
+
   router.GET("/pong", func(c *gin.Context) {
     c.JSON(200, gin.H{
       "message": "pong",
@@ -32,5 +47,6 @@ func main() {
       "connected": err,
     })
   })
+
   router.Run() // listens on 0.0.0.0:8080 by default
 }

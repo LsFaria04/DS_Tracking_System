@@ -38,6 +38,36 @@ To run the production Compose and Dockerfile (i.e., the ones without the .dev su
 
 **DO NOT COMMIT THE .ENV FILE!**
 
+# Tracking system frontend
+
+## Quick Start
+
+```bash
+# From project root
+cd frontend
+
+# Copy environment template and install deps
+cp .env.example .env
+npm install
+
+# Start dev container with hot reload (preferred)
+docker compose -f compose.dev.yml up --watch
+# Or run without Docker:
+npm run dev
+```
+
+### Accessing Services
+
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:8080 (must be running for API calls)
+
+To stop the frontend containers:
+
+```bash
+cd frontend
+docker compose -f compose.dev.yml down
+```
+
 ## Terraform Deployment to GCP
 
 ### Prerequisites
