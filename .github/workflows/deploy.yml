@@ -183,21 +183,21 @@ jobs:
           RESULT=$(curl -s ${{ needs.deploy-backend.outputs.backend_url }}/api/v1/blockchain/validate)
           echo $RESULT
           if echo $RESULT | grep -q '"valid":true'; then
-            echo "✅ Blockchain integrity verified"
+            echo "Blockchain integrity verified"
           else
-            echo "❌ Blockchain validation failed"
+            echo "Blockchain validation failed"
             exit 1
           fi
 
       - name: Create Deployment Summary
         run: |
-          echo "# 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "# Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🎯 Deployed Services" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployed Services" >> $GITHUB_STEP_SUMMARY
           echo "- **Backend**: ${{ needs.deploy-backend.outputs.backend_url }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: Production" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## ✅ Health Checks" >> $GITHUB_STEP_SUMMARY
-          echo "- Backend API: ✅ Healthy" >> $GITHUB_STEP_SUMMARY
-          echo "- Blockchain: ✅ Validated" >> $GITHUB_STEP_SUMMARY
+          echo "## Health Checks" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend API: Healthy" >> $GITHUB_STEP_SUMMARY
+          echo "- Blockchain: Validated" >> $GITHUB_STEP_SUMMARY
