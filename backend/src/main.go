@@ -10,6 +10,7 @@ import (
 import "os"
 import "fmt"
 import "time"
+import "strings"
 
 
 func main() {
@@ -23,11 +24,22 @@ func main() {
 
   router := gin.Default()
 
-  // Configure CORS middleware
+  // Configure CORS middleware (Allow frontend and localhost)
+
   router.Use(cors.New(cors.Config{
-    AllowOrigins: []string{
-      "http://localhost:3000",
-      "https://production-url.com", // Add here the production url when deployed to GCP Cloud Run
+    AllowOriginFunc: func(origin string) bool {
+      // Allow localhost for development 
+
+      fmt.Println("CORS Origin:", origin)
+      
+      if strings.HasPrefix(origin, "http://localhost") {
+        return true
+      }
+      // Allow any .run.app domain (Cloud Run)
+      if strings.HasSuffix(origin, ".run.app") {
+        return true
+      }
+      return false
     },
     AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
     AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},

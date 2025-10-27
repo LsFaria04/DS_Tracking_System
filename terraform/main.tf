@@ -100,7 +100,7 @@ resource "google_cloud_run_v2_service" "default" {
         value = var.db_user
       }
       env {
-        name  = "DB_PASSWORD"
+        name  = "DB_PASS"
         value = var.db_password
       }
       env {
@@ -210,4 +210,42 @@ output "environment_variables" {
     ENVIRONMENT                = var.environment
   }
   sensitive = false
+}
+
+
+# Frontend
+
+resource "google_cloud_run_v2_service" "frontend" {
+  name = "tracking-status-frontend"
+  location = var.region
+
+  template {
+    containers {
+      image = var.frontend_docker_image
+    
+
+      env {
+        name = "API_URL"
+        value = google_cloud_run_v2_service.default.uri
+      }
+    }
+
+
+  }
+  
+}
+
+# Frontend public access
+resource "google_cloud_run_v2_service_iam_binding" "frontend_public_access" {
+  project  = google_cloud_run_v2_service.frontend.project
+  location = google_cloud_run_v2_service.frontend.location
+  name     = google_cloud_run_v2_service.frontend.name
+
+  role    = "roles/run.invoker"
+  members = ["allUsers"]
+}
+
+output "frontend_url" {
+  description = "The URL of the deployed frontend Cloud Run service."
+  value       = google_cloud_run_v2_service.frontend.uri
 }

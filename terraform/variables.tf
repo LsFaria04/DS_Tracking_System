@@ -16,9 +16,16 @@ variable "service_name" {
 }
 
 variable "docker_image" {
-  description = "Container image to deploy to Cloud Run (including tag)."
+  description = "Container image of backend to deploy to Cloud Run (including tag)."
   type        = string
   default     = "us-docker.pkg.dev/cloudrun/container/tracking-status"
+}
+
+variable "frontend_docker_image" {
+  description = "Container image of frontend to deploy to Cloud Run (including tag)."
+  type =  string
+  default = "us-docker.pkg.dev/cloudrun/container/tracking-status-frontend"
+  
 }
 
 variable "db_instance_name" {

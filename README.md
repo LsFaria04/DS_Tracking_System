@@ -111,14 +111,26 @@ terraform init
 ### Deploy to GCP
 
 ```shell
-# Build and push Docker image
+# Build and push Docker image backend
 cd backend
-docker build -f Dockerfile -t returnedft/tracking-status:test .
-docker push returnedft/tracking-status:test
+docker build -f Dockerfile -t <yourname>/tracking-status:<tag> .
+docker push <yourname>/tracking-status:<tag>
+
+# Build and push Docker image frontend 
+cd frontend
+docker build -f Dockerfile -t <yourname>/tracking-status-frontend:<tag> .
+docker push <yourname>/tracking-status-frontend:<tag>
 
 # Deploy Cloud SQL + Cloud Run
 cd terraform
-terraform apply
+terraform apply -replace="google_cloud_run_v2_service.default"  # To ensure backend updates
+
+terraform apply -replace="google_cloud_run_v2_service.frontend"  # To ensure frontend updates (if runned this command, you need to bind the iam policy to be able to enter the app)
+
+# iam policy
+
+gcloud run services add-iam-policy-binding tracking-status-frontend --region=europe-west1 --member=allUsers --role=roles/run.invoker
+
 ```
 
 Takes 10-15 minutes. Type `yes` when prompted.
