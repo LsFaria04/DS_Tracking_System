@@ -7,9 +7,9 @@ export default function Home() {
   const [backendStatus, setBackendStatus] = useState<string>("Checking...");
 
   useEffect(() => {
-    fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080")
+    fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/order/1")
       .then((res) => res.json())
-      .then((data) => setBackendStatus(data.message))
+      .then((data) => setBackendStatus(data.order))
       .catch(() => setBackendStatus("Backend unreachable"));
   }, []);
 

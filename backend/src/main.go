@@ -11,11 +11,15 @@ import (
 	"gorm.io/gorm"
 )
 
-
-func main() {
+//configure the database connection using gorm
+func configDB() (*gorm.DB) {
   dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASS"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT") )
   db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+  return db  
+}
 
+//Configure the router that will be used for the API
+func configRouter(db *gorm.DB) (*gin.Engine){
   router := gin.Default()
 
   // Configure CORS middleware
@@ -33,6 +37,13 @@ func main() {
 
   //registers the routes
   routes.RegisterRoutes(router, db)
+  return router
+}
+
+func main() {
+  db := configDB()
+
+  router := configRouter(db)
 
   router.Run(":8080") // listens on 0.0.0.0:8080 by default
 }

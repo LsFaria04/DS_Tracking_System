@@ -26,7 +26,7 @@ func (h *OrderHandler) GetOrderByID(c *gin.Context){
         }
         
     } else{
-		c.JSON(http.StatusOK,order)
+		c.JSON(http.StatusOK,gin.H{"order" : order})
 	}
 	
 }
