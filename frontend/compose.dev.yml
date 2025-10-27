@@ -14,8 +14,4 @@ services:
           target: /app/src
         - action: rebuild
           path: ./package.json
-    volumes:
-      - ./src:/app/src
-      - ./public:/app/public
-      - /app/node_modules
-      - /app/.next
+    

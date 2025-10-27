@@ -9,7 +9,7 @@ export default function Home() {
   useEffect(() => {
     fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/order/1")
       .then((res) => res.json())
-      .then((data) => setBackendStatus(data.order))
+      .then((data) => setBackendStatus(data.message))
       .catch(() => setBackendStatus("Backend unreachable"));
   }, []);
 
