@@ -4,17 +4,14 @@ import (
 	"app/routes"
 	"fmt"
 	"os"
+	"strings"
 	"time"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-import "os"
-import "fmt"
-import "time"
-import "strings"
 
 //configure the database connection using gorm
 func configDB() (*gorm.DB) {
