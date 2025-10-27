@@ -32,6 +32,10 @@ jobs:
       working-directory: backend/src
       run: go test -coverprofile=coverage.out ./...
 
+    - name: Generate HTML coverage report
+      working-directory: backend/src
+      run: go tool cover -html=coverage.out -o coverage.html
+
     - name: Upload coverage report
       uses: actions/upload-artifact@v4
       with:
