@@ -1,18 +1,26 @@
--- Sample seed data for development and testing
--- This creates a few sample orders to demonstrate the tracking system
+-- Insert sample orders
+INSERT INTO orders (customer_id, tracking_code, delivery_estimates, delivery_address)
+VALUES
+  (101, 'TRACK001', CURRENT_DATE + INTERVAL '5 days', '123 Elm Street'),
+  (102, 'TRACK002', CURRENT_DATE + INTERVAL '3 days', '456 Oak Avenue'),
+  (103, 'TRACK003', CURRENT_DATE + INTERVAL '7 days', '789 Pine Road');
 
-INSERT INTO orders (order_number, customer_id, current_status) VALUES
-    ('ORD-2024-001', 'CUST-100', 'IN_PRODUCTION'),
-    ('ORD-2024-002', 'CUST-101', 'SHIPPED'),
-    ('ORD-2024-003', 'CUST-102', 'RECEIVED');
+-- Insert status history for each order
+INSERT INTO order_status_history (order_id, order_status, note, order_location)
+VALUES
+  (1, 'PROCESSING', 'Order received', 'Warehouse A'),
+  (1, 'SHIPPED', 'Left warehouse', 'Warehouse A'),
+  (2, 'PROCESSING', 'Order received', 'Warehouse B'),
+  (2, 'IN TRANSIT', 'On the way', 'Distribution Center'),
+  (3, 'PROCESSING', 'Order received', 'Warehouse C'),
+  (3, 'CANCELLED', 'Customer requested cancellation', 'Warehouse C');
 
--- Initial status history entries
-INSERT INTO order_status_history (order_id, status, notes) VALUES
-    (1, 'IN_PRODUCTION', 'Order started production'),
-    (2, 'IN_PRODUCTION', 'Order started production'),
-    (2, 'READY_FOR_SHIPMENT', 'Production completed'),
-    (2, 'SHIPPED', 'Package dispatched'),
-    (3, 'IN_PRODUCTION', 'Order started production'),
-    (3, 'READY_FOR_SHIPMENT', 'Production completed'),
-    (3, 'SHIPPED', 'Package dispatched'),
-    (3, 'RECEIVED', 'Delivered to customer');
+-- Insert products for each order
+INSERT INTO order_products (order_id, product_id, quantity)
+VALUES
+  (1, 201, 2),
+  (1, 202, 1),
+  (2, 203, 3),
+  (3, 204, 1),
+  (3, 205, 2);
+

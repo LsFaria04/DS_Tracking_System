@@ -12,13 +12,12 @@ cd backend
 docker compose -f compose.dev.yml up --watch
 ```
 
-The database schema will be automatically initialized on first run.
+The database schema will be automatically initialized on first run. However, to populate with data the development database you need to access pgadmin and run the data seed provided in db/seeds.
 
 ### Accessing Services
 
 - **Backend API**: http://localhost:8080
-- **PgAdmin**: http://localhost:4321 (email: fakemail@gmail.com, password: safePassword)
-- **PostgreSQL**: localhost:5432
+- **PgAdmin**: http://localhost:4321
 
 To stop the containers and remove them use:
 
