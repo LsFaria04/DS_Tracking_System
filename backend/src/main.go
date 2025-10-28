@@ -1,8 +1,10 @@
 package main
 
 import (
+	"app/blockchain"
 	"app/routes"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -53,6 +55,30 @@ func configRouter(db *gorm.DB) (*gin.Engine){
 
 func main() {
   db := configDB()
+
+  // Initialize blockchain client (Sepolia testnet)
+  blockchainClient, err := blockchain.NewClient()
+  if err != nil {
+    log.Printf("⚠️  Warning: Failed to initialize blockchain client: %v", err)
+    log.Println("⚠️  Backend will continue without blockchain functionality")
+  } else {
+    defer blockchainClient.Close()
+    
+    // Test blockchain connection
+    balance, err := blockchainClient.GetWalletBalance()
+    if err != nil {
+      log.Printf("⚠️  Warning: Failed to get wallet balance: %v", err)
+    } else {
+      log.Printf("💰 Wallet balance: %s", blockchain.FormatBalance(balance))
+    }
+    
+    blockNumber, err := blockchainClient.GetBlockNumber()
+    if err != nil {
+      log.Printf("⚠️  Warning: Failed to get block number: %v", err)
+    } else {
+      log.Printf("🔗 Current Sepolia block: %d", blockNumber)
+    }
+  }
 
   router := configRouter(db)
 

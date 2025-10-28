@@ -64,13 +64,20 @@ variable "environment" {
   default     = "production"
 }
 
-variable "blockchain_difficulty" {
-  description = "Blockchain mining difficulty level (1-5). Higher = more secure but slower."
-  type        = number
-  default     = 2
-  
-  validation {
-    condition     = var.blockchain_difficulty >= 1 && var.blockchain_difficulty <= 5
-    error_message = "Blockchain difficulty must be between 1 and 5."
-  }
+variable "blockchain_rpc_url" {
+  description = "Ethereum RPC URL for connecting to Sepolia testnet (e.g., Infura endpoint)"
+  type        = string
+  sensitive   = true
+}
+
+variable "blockchain_private_key" {
+  description = "Private key for Ethereum wallet to sign transactions. NEVER commit this to version control!"
+  type        = string
+  sensitive   = true
+}
+
+variable "blockchain_contract_address" {
+  description = "Deployed smart contract address on Sepolia testnet (leave empty if not yet deployed)"
+  type        = string
+  default     = ""
 }

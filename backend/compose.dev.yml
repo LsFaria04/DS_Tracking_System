@@ -37,6 +37,10 @@ services:
       DB_PASS: safePassword
       DB_NAME: postgres
       DB_PORT: 5432
+      BLOCKCHAIN_RPC_URL: https://sepolia.infura.io/v3/8c9b65e32782487296af1ecc494ace20
+      BLOCKCHAIN_PRIVATE_KEY: 304744fdba3e9f3ac2ea259e87d5ad34325b0c04d8e57df1004ec99f41741cc4
+      BLOCKCHAIN_CONTRACT_ADDRESS: ""
+      BLOCKCHAIN_NETWORK: sepolia
     develop:
       watch:
         - action: sync

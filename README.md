@@ -95,18 +95,34 @@ gcloud config set project madeinportugal
 # Enable required APIs
 gcloud services enable cloudrun.googleapis.com
 gcloud services enable sqladmin.googleapis.com
-gcloud services enable storage.googleapis.com
 
 # Navigate to terraform directory
-cd backend/terraform
+cd terraform
 
 # Create configuration file
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your project_id, db_password, etc.
+# Edit terraform.tfvars with your:
+#   - project_id
+#   - db_password
+#   - blockchain_rpc_url (Infura Sepolia endpoint)
+#   - blockchain_private_key (MetaMask private key - do not share this)
+#   - blockchain_contract_address (leave empty until contract is deployed)
 
 # Initialize Terraform (first time only)
 terraform init
 ```
+
+### Get MetaMask Private Key
+
+**⚠️ SECURITY WARNING**: Never commit your private key to version control!
+
+1. Open MetaMask browser extension
+2. Click the 3 dots menu on your account
+3. Select "Account details"
+4. Click "Show private key"
+5. Enter your MetaMask password
+6. Copy the private key
+7. Paste it in `terraform/terraform.tfvars` under `blockchain_private_key`
 
 ### Deploy to GCP
 
@@ -117,23 +133,26 @@ docker build -f Dockerfile -t <yourname>/tracking-status:<tag> .
 docker push <yourname>/tracking-status:<tag>
 
 # Build and push Docker image frontend 
-cd frontend
+cd ../frontend
 docker build -f Dockerfile -t <yourname>/tracking-status-frontend:<tag> .
 docker push <yourname>/tracking-status-frontend:<tag>
 
-# Deploy Cloud SQL + Cloud Run
-cd terraform
+# Deploy Cloud SQL + Cloud Run + Blockchain Config
+cd ../terraform
 terraform apply -replace="google_cloud_run_v2_service.default"  # To ensure backend updates
 
-terraform apply -replace="google_cloud_run_v2_service.frontend"  # To ensure frontend updates (if runned this command, you need to bind the iam policy to be able to enter the app)
+terraform apply -replace="google_cloud_run_v2_service.frontend"  # To ensure frontend updates (if run this command, you need to bind the iam policy to be able to enter the app)
 
-# iam policy
-
+# IAM policy for frontend public access
 gcloud run services add-iam-policy-binding tracking-status-frontend --region=europe-west1 --member=allUsers --role=roles/run.invoker
-
 ```
 
-Takes 10-15 minutes. Type `yes` when prompted.
+**Alternative: Use deployment script**
+
+PowerShell (Windows):
+```powershell
+.\deploy.ps1
+```
 
 Get your service URL:
 ```shell

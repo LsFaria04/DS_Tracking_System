@@ -8,9 +8,13 @@ import (
 
 func RegisterRoutes(router *gin.Engine, db *gorm.DB){
 	orderHandler := handlers.OrderHandler{DB : db}
+	blockchainHandler := handlers.BlockchainHandler{}
 
 	//routes for the orders
 	router.GET("/order/:id", orderHandler.GetOrderByID)
+
+	// Blockchain status endpoint
+	router.GET("/blockchain/status", blockchainHandler.GetBlockchainStatus)
 
 	//old routes
 	router.GET("/pong", func(c *gin.Context) {
