@@ -24,7 +24,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB){
   })
   router.GET("/", func(c *gin.Context) {
     c.JSON(200, gin.H{
-      "message": "DS is awesome!",
+      "message": "Online", // "DS is awesome!"
     })
   })
 }
