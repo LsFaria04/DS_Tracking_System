@@ -1,5 +1,14 @@
+-- Insert sample products
+INSERT INTO products (id, name, price)
+VALUES
+  (201, 'Gaming Headset HYPERX Cloud II', 62.99),
+  (202, 'Mechanical Keyboard Logitech G Pro', 67.98),
+  (203, 'Gaming Mouse RAZER Deathadder V2', 49.99),
+  (204, 'Mousepad LOGITECH G240', 17.99),
+  (205, 'USB-C Cable 2m', 5.99);
+
 -- Insert sample orders
-INSERT INTO orders (customer_id, tracking_code, delivery_estimates, delivery_address)
+INSERT INTO orders (customer_id, tracking_code, delivery_estimate, delivery_address)
 VALUES
   (101, 'TRACK001', CURRENT_DATE + INTERVAL '5 days', '123 Elm Street'),
   (102, 'TRACK002', CURRENT_DATE + INTERVAL '3 days', '456 Oak Avenue'),
