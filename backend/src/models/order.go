@@ -9,5 +9,6 @@ type Orders struct{
     Tracking_Code     string    `gorm:"unique;not null"`
     Delivery_Estimates time.Time
     Delivery_Address  string    `gorm:"not null"`
+    Price             float64   `gorm:"not null;default:0"`
 }
 

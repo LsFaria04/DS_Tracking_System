@@ -32,10 +32,18 @@ export default function Home() {
         />
         
         {/* Backend Status Check */}
-        <div className="p-4 bg-blue-100 dark:bg-blue-900 rounded">
+      <div className="flex items-center gap-4 p-4 bg-blue-100 dark:bg-blue-900 rounded">
+        <div>
           <p className="font-bold">Backend Status:</p>
           <p>{backendStatus}</p>
         </div>
+        <button
+          onClick={() => window.location.href = "/order/1"}
+          className="ml-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700"
+        >
+          Track Order
+        </button>
+      </div>
 
         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
