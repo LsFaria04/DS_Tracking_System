@@ -11,6 +11,8 @@ interface OrderStatus {
 
 interface OrderProduct {
   product_id: number;
+  name: string;
+  price: number;
   quantity: number;
 }
 
@@ -40,8 +42,13 @@ export default function OrderPage() {
           delivery_address: o.Delivery_Address,
           created_at: o.Created_At,
           price: o.Price,
-          products: [],
-          statusHistory: [] 
+          products: o.Products?.map((p: any) => ({
+            product_id: p.ProductID,
+            name: p.Product ? p.Product.Name : "Unknown",
+            price: p.Product ? p.Product.Price : 0,
+            quantity: p.Quantity
+          })) || [],
+          statusHistory: []
         });
       })
       .finally(() => setLoading(false));
@@ -73,7 +80,10 @@ export default function OrderPage() {
         <ul className="space-y-2">
           {order.products.map(p => (
             <li key={p.product_id} className="border p-2 rounded">
-              Product {p.product_id} — Quantity: {p.quantity}
+              <p className="font-semibold">{p.name}</p>
+              <p>Product ID: {p.product_id}</p>
+              <p>Quantity: {p.quantity}</p>
+              <p>Price: ${p.price}</p>
             </li>
           ))}
         </ul>

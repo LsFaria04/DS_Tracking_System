@@ -11,11 +11,11 @@ import (
 type OrderHandler struct{
 	DB *gorm.DB
 }
-
+	
 func (h *OrderHandler) GetOrderByID(c *gin.Context){
 	id := c.Param("id")
 	var order models.Orders
-	result := h.DB.First(&order, id)
+	result := h.DB.Preload("Products.Product").First(&order, id)
 
 	//check if there was an error with the database request
     if result.Error != nil {
