@@ -65,7 +65,7 @@ export default function OrderPage() {
           <p className="font-bold">Order Number: {id}</p>
           <p>Order date: {new Date(order.created_at).toDateString()}</p>
           <p>Delivery: {order.delivery_address}</p>
-          <p>Price: {order.price}</p> 
+          <p>Price: {order.price}€</p>
           <p>Estimated Delivery: {new Date(order.delivery_estimates).toDateString()}</p>
         </div>
         <div>
@@ -83,7 +83,7 @@ export default function OrderPage() {
               <p className="font-semibold">{p.name}</p>
               <p>Product ID: {p.product_id}</p>
               <p>Quantity: {p.quantity}</p>
-              <p>Price: ${p.price}</p>
+              <p>Price: {p.price}€</p>
             </li>
           ))}
         </ul>
