@@ -1,10 +1,10 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { OrderStatus } from '@/app/types';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Fix for default marker icons in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -42,25 +42,18 @@ interface OrderMapProps {
     sellerLongitude?: number;
 }
 
-function DynamicPolylines({ routeCoordinates, sellerCoords, deliveryCoords }: { 
-    routeCoordinates: [number, number][]; 
-    sellerCoords: [number, number] | null;
-    deliveryCoords: [number, number] | null;
+function Polylines({ partialRoute, isDelivered }: { 
+    partialRoute: [number, number][]; 
+    isDelivered: boolean;
 }) {
     const weight = 2;
 
-    // Build full route: seller -> storages -> delivery
-    const fullRoute: [number, number][] = [];
-    if (sellerCoords) fullRoute.push(sellerCoords);
-    fullRoute.push(...routeCoordinates);
-    if (deliveryCoords) fullRoute.push(deliveryCoords);
-
     return (
         <>
-            {fullRoute.length > 1 && (
+            {partialRoute.length > 1 && (
                 <Polyline
-                    positions={fullRoute}
-                    color="blue"
+                    positions={partialRoute}
+                    color={isDelivered ? 'green' : 'blue'}
                     weight={weight}
                     opacity={0.7}
                 />
@@ -91,7 +84,7 @@ export default function OrderMap({
         deliveryLatitude && deliveryLongitude ? [deliveryLatitude, deliveryLongitude] : null;
 
     // Center map on all points
-    const allCoords = [
+    const allCoords: [number, number][] = [
         ...(sellerCoords ? [sellerCoords] : []),
         ...routeCoordinates,
         ...(deliveryCoords ? [deliveryCoords] : [])
@@ -103,6 +96,41 @@ export default function OrderMap({
         ]
         : [39.5, -8.0];
 
+
+    const latestStatus = orderHistory.length > 0 ? orderHistory[orderHistory.length - 1] : null;
+    
+    const isDelivered = latestStatus?.order_status === 'DELIVERED';
+
+    const partialRoute: [number, number][] = [];
+
+    // 1. Add seller
+    if (sellerCoords) {
+        partialRoute.push(sellerCoords);
+    }
+
+    // 2. Add all *visited* storage locations from history
+    partialRoute.push(...routeCoordinates);
+
+    // 3. ONLY add delivery location if the order is marked as delivered
+    if (isDelivered && deliveryCoords) {
+        partialRoute.push(deliveryCoords);
+    }
+
+    useEffect(() => {
+        if (!mapInstance) return;
+
+        if (isDelivered) {
+            if (allCoords.length > 0) {
+                mapInstance.fitBounds(allCoords, { padding: [50, 50] });
+            }
+        } else {
+            if (partialRoute.length > 0) {
+                const lastKnownLocation = partialRoute[partialRoute.length - 1];
+                mapInstance.flyTo(lastKnownLocation, 12, { duration: 1.5 });
+            }
+        }
+    }, [mapInstance, isDelivered, partialRoute, allCoords]);
+
     if (locationsWithCoords.length === 0 && !sellerCoords) {
         return (
             <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -113,12 +141,12 @@ export default function OrderMap({
 
     const handleZoomToDelivery = () => {
         if (deliveryCoords && mapInstance) {
-            mapInstance.flyTo(deliveryCoords, 15, { duration: 1.5 });
+            mapInstance.flyTo(deliveryCoords, 12, { duration: 1.5 });
         }
     };
     const handleZoomToSeller = () => {
         if (sellerCoords && mapInstance) {
-            mapInstance.flyTo(sellerCoords, 15, { duration: 1.5 });
+            mapInstance.flyTo(sellerCoords, 12, { duration: 1.5 });
         }
     };
 
@@ -134,10 +162,9 @@ export default function OrderMap({
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            <DynamicPolylines
-                routeCoordinates={routeCoordinates}
-                sellerCoords={sellerCoords}
-                deliveryCoords={deliveryCoords}
+            <Polylines
+                partialRoute={partialRoute}
+                isDelivered={isDelivered}
             />
 
             {/* Seller marker */}

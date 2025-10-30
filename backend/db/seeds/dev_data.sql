@@ -37,7 +37,10 @@ VALUES
   (104, 501, 'Dona Lurdes, Rua dos Pescadores 45, 2870-108 Montijo, Portugal', 38.7060, -8.9730, 'TRACK004', CURRENT_DATE + INTERVAL '10 days', 'Estrada Monumental 390, 9000-250 Funchal, Madeira', 32.6500, -16.9300),
   
   -- Order 5: Seller near Porto (Vila Nova de Gaia) -> Distribution Center Porto -> Açores Hub (delivery in Ponta Delgada, outskirts)
-  (105, 502, 'Dona Maria, Avenida da República 1200, 4430-192 Vila Nova de Gaia, Portugal', 41.1230, -8.6100, 'TRACK005', CURRENT_DATE + INTERVAL '12 days', 'Rua do Loreto 15, 9500-418 Ponta Delgada, Açores', 37.7500, -25.6700);
+  (105, 502, 'Dona Maria, Avenida da República 1200, 4430-192 Vila Nova de Gaia, Portugal', 41.1230, -8.6100, 'TRACK005', CURRENT_DATE + INTERVAL '12 days', 'Rua do Loreto 15, 9500-418 Ponta Delgada, Açores', 37.7500, -25.6700),
+
+  -- Order 6: Seller near Évora (Vila Viçosa) -> Regional Center Évora -> Delivery in Viseu (Centro)
+  (106, 504, 'Dona Beatriz, Largo do Conde 8, 7160-251 Vila Viçosa, Portugal', 38.7830, -7.4160, 'TRACK006', CURRENT_DATE + INTERVAL '8 days', 'Rua Formosa 120, 3500-161 Viseu, Portugal', 40.6566, -7.9122);
 
 -- Insert status history for each order
 INSERT INTO order_status_history (order_id, order_status, note, order_location, storage_id)
@@ -68,7 +71,14 @@ VALUES
   (5, 'PROCESSING', 'Order received from seller', 'Dona Maria', NULL),
   (5, 'SHIPPED', 'Picked up from seller', 'Distribution Center Porto', 2),
   (5, 'IN TRANSIT', 'Package at warehouse, preparing for Açores transit', 'Distribution Center Porto', 2),
-  (5, 'IN TRANSIT', 'Arrived at Açores hub', 'Açores Hub Ponta Delgada', 11);
+  (5, 'IN TRANSIT', 'Arrived at Açores hub', 'Açores Hub Ponta Delgada', 11),
+
+  -- Order 6: Seller (Évora) -> Regional Center Évora -> Regional Hub Viseu (Delivered)
+  (6, 'PROCESSING', 'Order received from seller', 'Dona Beatriz', NULL),
+  (6, 'SHIPPED', 'Picked up from seller', 'Regional Center Évora', 6),
+  (6, 'IN TRANSIT', 'In transit to Viseu', 'Regional Center Évora', 6),
+  (6, 'OUT FOR DELIVERY', 'Out for delivery in Viseu', 'Regional Hub Viseu', 9),
+  (6, 'DELIVERED', 'Delivered to customer in Viseu', 'Regional Hub Viseu', 9);
 
 -- Insert products for each order
 INSERT INTO order_products (order_id, product_id, quantity)
@@ -81,5 +91,6 @@ VALUES
   (4, 201, 1),
   (4, 205, 3),
   (5, 202, 1),
-  (5, 204, 2);
-
+  (5, 204, 2),
+  (6, 201, 1),
+  (6, 203, 2);

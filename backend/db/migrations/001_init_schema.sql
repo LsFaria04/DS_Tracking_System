@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS storages CASCADE;
 DROP TYPE IF EXISTS order_state CASCADE;
 
 --Create an enum with all the possible order states
-CREATE TYPE order_state AS ENUM ('PROCESSING', 'SHIPPED', 'IN TRANSIT', 'OUT FOR DELIVERY', 'CANCELLED', 'RETURNED', 'FAILED DELIVERY');
+CREATE TYPE order_state AS ENUM ('PROCESSING', 'SHIPPED', 'IN TRANSIT', 'OUT FOR DELIVERY', 'DELIVERED', 'CANCELLED', 'RETURNED', 'FAILED DELIVERY');
 
 -- Storages table: contains warehouse/storage locations with GPS coordinates
 CREATE TABLE storages (
