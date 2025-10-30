@@ -1,3 +1,19 @@
+interface OrderProduct {
+  product_id: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface Storage {
+  Id: number;
+  Name: string;
+  Address: string;
+  Latitude: number;
+  Longitude: number;
+  Created_At: string;
+}
+
 interface OrderStatus {
   order_status: string;
   note: string;
@@ -5,13 +21,8 @@ interface OrderStatus {
   timestamp: Date;
   order: OrderData | null;
   order_id: number;
-}
-
-interface OrderProduct {
-  product_id: number;
-  name: string;
-  price: number;
-  quantity: number;
+  storage_id?: number;
+  Storage?: Storage;
 }
 
 interface OrderData {
@@ -24,4 +35,4 @@ interface OrderData {
   statusHistory: OrderStatus[];
 }
 
-export type {OrderData, OrderProduct, OrderStatus}
+export type {OrderData, OrderProduct, OrderStatus, Storage}

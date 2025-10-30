@@ -9,6 +9,7 @@ import (
 func RegisterRoutes(router *gin.Engine, db *gorm.DB){
 	orderHandler := handlers.OrderHandler{DB : db}
 	orderStatusHistory := handlers.OrderStatusHistoryHandler{DB : db}
+	storageHandler := handlers.StorageHandler{DB : db}
 	blockchainHandler := handlers.BlockchainHandler{}
 
 	//routes for the orders
@@ -16,6 +17,9 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB){
 
 	//routes for the order history
 	router.GET("/order/history/:order_id", orderStatusHistory.GetOrderStatusByOrderID)
+
+	//routes for the storages
+    router.GET("/storages", storageHandler.GetAllStorages)
 
 	// Blockchain status endpoint
 	router.GET("/blockchain/status", blockchainHandler.GetBlockchainStatus)
