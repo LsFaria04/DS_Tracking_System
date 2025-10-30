@@ -1,14 +1,16 @@
 package routes
 
 import (
+	"app/blockchain"
+	"app/handlers"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"app/handlers"
 )
 
-func RegisterRoutes(router *gin.Engine, db *gorm.DB){
+func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchain.Client){
 	orderHandler := handlers.OrderHandler{DB : db}
-	orderStatusHistory := handlers.OrderStatusHistoryHandler{DB : db}
+	orderStatusHistory := handlers.OrderStatusHistoryHandler{DB : db, Client: blockChainClient}
 	storageHandler := handlers.StorageHandler{DB : db}
 	blockchainHandler := handlers.BlockchainHandler{}
 
@@ -17,8 +19,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB){
 
 	//routes for the order history
 	router.GET("/order/history/:order_id", orderStatusHistory.GetOrderStatusByOrderID)
-
-	router.GET("/order/history/set/:order_id", orderStatusHistory.AddOrderUpdate)
+	router.POST("/order/history/add", orderStatusHistory.AddOrderUpdate)
 
 	//routes for the storages
     router.GET("/storages", storageHandler.GetAllStorages)

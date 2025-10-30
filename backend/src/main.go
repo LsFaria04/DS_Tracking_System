@@ -16,14 +16,24 @@ import (
 )
 
 //configure the database connection using gorm
-func configDB() (*gorm.DB) {
+func configDB() (*gorm.DB, error) {
   dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASS"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT") )
-  db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-  return db  
+  db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+  return db, err 
+}
+
+func configBlockChainClient() (*blockchain.Client, error){
+  //connect to the block chain client
+    client, err := blockchain.NewClient()
+    if err != nil {
+        
+        return nil, err
+    }
+    return client, nil
 }
 
 //Configure the router that will be used for the API
-func configRouter(db *gorm.DB) (*gin.Engine){
+func configRouter(db *gorm.DB) (*gin.Engine, error){
   router := gin.Default()
 
   // Configure CORS middleware (Allow frontend and localhost)
@@ -48,39 +58,31 @@ func configRouter(db *gorm.DB) (*gin.Engine){
     MaxAge: 12 * time.Hour,
   }))
 
+  blockChainClient, err := configBlockChainClient()
+
+  if err != nil{
+    return nil, err
+  }
+
   //registers the routes
-  routes.RegisterRoutes(router, db)
-  return router
+  routes.RegisterRoutes(router, db, blockChainClient)
+  return router, nil
 }
 
 func main() {
-  db := configDB()
+  db, err := configDB()
 
-  // Initialize blockchain client (Sepolia testnet)
-  blockchainClient, err := blockchain.NewClient()
   if err != nil {
-    log.Printf("⚠️  Warning: Failed to initialize blockchain client: %v", err)
-    log.Println("⚠️  Backend will continue without blockchain functionality")
-  } else {
-    defer blockchainClient.Close()
-    
-    // Test blockchain connection
-    balance, err := blockchainClient.GetWalletBalance()
-    if err != nil {
-      log.Printf("⚠️  Warning: Failed to get wallet balance: %v", err)
-    } else {
-      log.Printf("💰 Wallet balance: %s", blockchain.FormatBalance(balance))
-    }
-    
-    blockNumber, err := blockchainClient.GetBlockNumber()
-    if err != nil {
-      log.Printf("⚠️  Warning: Failed to get block number: %v", err)
-    } else {
-      log.Printf("🔗 Current Sepolia block: %d", blockNumber)
-    }
+    log.Printf("Error while conecting to the database: %v", err)
+    return
   }
 
-  router := configRouter(db)
+  router,err := configRouter(db)
+
+  if err != nil{
+    log.Printf("Error while configuring the routing: %v", err)
+    return
+  }
 
   router.Run(":8080") // listens on 0.0.0.0:8080 by default
 }
