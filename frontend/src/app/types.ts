@@ -29,6 +29,11 @@ interface OrderData {
   tracking_code: string;
   delivery_estimates: string;
   delivery_address: string;
+  delivery_latitude?: number;
+  delivery_longitude?: number;
+  seller_address?: string;
+  seller_latitude?: number;
+  seller_longitude?: number;
   created_at: string;
   price: string;
   products: OrderProduct[];

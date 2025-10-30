@@ -30,6 +30,11 @@ export default function OrderPage() {
           tracking_code: o.Tracking_Code,
           delivery_estimates: o.Delivery_Estimates,
           delivery_address: o.Delivery_Address,
+          delivery_latitude: o.Delivery_Latitude,
+          delivery_longitude: o.Delivery_Longitude,
+          seller_address: o.Seller_Address,
+          seller_latitude: o.Seller_Latitude,
+          seller_longitude: o.Seller_Longitude,
           created_at: o.Created_At,
           price: o.Price,
           products: o.Products?.map((p: any) => ({
@@ -93,7 +98,17 @@ export default function OrderPage() {
     <div className="max-w-4xl mx-auto p-8 space-y-8">
       {/* Map */}
       <section>
-        {orderHistory && <OrderMap orderHistory={orderHistory} deliveryAddress={order.delivery_address} />}
+        {orderHistory && (
+          <OrderMap
+            orderHistory={orderHistory}
+            deliveryAddress={order.delivery_address}
+            deliveryLatitude={order.delivery_latitude}
+            deliveryLongitude={order.delivery_longitude}
+            sellerAddress={order.seller_address}
+            sellerLatitude={order.seller_latitude}
+            sellerLongitude={order.seller_longitude}
+          />
+        )}
       </section>
 
       {/* Header */}
