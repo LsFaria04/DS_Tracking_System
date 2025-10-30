@@ -3,6 +3,17 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { OrderData, OrderProduct, OrderStatus } from "@/app/types";
+import dynamic from 'next/dynamic';
+
+// Import map component dynamically to avoid SSR issues
+const OrderMap = dynamic(() => import('@/app/components/OrderMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
+      <p className="text-gray-500">Loading map...</p>
+    </div>
+  )
+});
 
 export default function OrderPage() {
   const { id } = useParams();
@@ -80,10 +91,11 @@ export default function OrderPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-8">
-      {/* Map Placeholder */}
-      <section className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-        <p className="text-gray-500">Map will be displayed here</p>
+      {/* Map */}
+      <section>
+        {orderHistory && <OrderMap orderHistory={orderHistory} deliveryAddress={order.delivery_address} />}
       </section>
+
       {/* Header */}
       <header className="flex justify-between items-start">
         <div>
