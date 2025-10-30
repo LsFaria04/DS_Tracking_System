@@ -11,7 +11,7 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:8080/order/${id}`)
+    fetch(process.env.API_URL + `/order/${id}` || `http://localhost:8080/order/${id}`)
       .then(res => res.json())
       .then(data => {
         const o = data.order;
@@ -31,7 +31,7 @@ export default function OrderPage() {
         });
       })
       .finally(() => setLoading(false));
-      fetch(`http://localhost:8080/order/history/${id}`)
+      fetch(process.env.API_URL + `/order/history/${id}` ||`http://localhost:8080/order/history/${id}`)
       .then(res => res.json())
       .then(data => {
         const o = data.order_status_history;
