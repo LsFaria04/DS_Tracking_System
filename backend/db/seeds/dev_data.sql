@@ -10,7 +10,13 @@ INSERT INTO storages (name, address, latitude, longitude) VALUES
 ('Distribution Center Setúbal', 'Av. Luísa Todi, 2900-456 Setúbal, Portugal', 38.5244, -8.8882),
 ('Regional Hub Viseu', 'Rua Formosa, 3500-161 Viseu, Portugal', 40.6566, -7.9122),
 ('Madeira Hub Funchal', 'Av. Arriaga, 9000-060 Funchal, Madeira', 32.6669, -16.9241),
-('Açores Hub Ponta Delgada', 'Av. Infante Dom Henrique, 9500-150 Ponta Delgada, Açores', 37.7412, -25.6756);
+('Açores Hub Ponta Delgada', 'Av. Infante Dom Henrique, 9500-150 Ponta Delgada, Açores', 37.7412, -25.6756),
+('Lisbon Airport (Cargo)', 'Aeroporto Humberto Delgado, 1700-111 Lisboa, Portugal', 38.7742, -9.1342),
+('Porto Airport (Cargo)', 'Aeroporto Francisco Sá Carneiro, 4470-558 Maia, Portugal', 41.2481, -8.6814),
+('Funchal Airport (Cargo)', 'Aeroporto da Madeira, 9100-105 Santa Cruz, Madeira', 32.6979, -16.7745),
+('Ponta Delgada Airport (Cargo)', 'Aeroporto João Paulo II, 9500-749 Ponta Delgada, Açores', 37.7412, -25.6980),
+('Faro Airport (Cargo)', 'Aeroporto Gago Coutinho, 8006-901 Faro, Portugal', 37.0142, -7.9659),
+('Beja Airport (Cargo)', 'Aeroporto de Beja, EM528-2, 7800-745 Beja, Portugal', 38.0775, -7.9317);
 
 -- Insert sample products
 INSERT INTO products (id, name, price)
@@ -63,14 +69,18 @@ VALUES
   -- Order 4: Seller (Lisboa) -> Main Warehouse Lisboa -> Madeira Hub
   (4, 'PROCESSING', 'Order received from seller', 'Dona Lurdes', NULL),
   (4, 'SHIPPED', 'Picked up from seller', 'Main Warehouse Lisboa', 1),
-  (4, 'IN TRANSIT', 'Package at warehouse, preparing for Madeira transit', 'Main Warehouse Lisboa', 1),
+  (4, 'IN TRANSIT', 'Package at warehouse, preparing for air transit', 'Main Warehouse Lisboa', 1),
+  (4, 'IN TRANSIT', 'Arrived at Lisbon Airport', 'Lisbon Airport (Cargo)', 12),
+  (4, 'IN TRANSIT', 'Arrived at Funchal Airport', 'Funchal Airport (Cargo)', 14),
   (4, 'IN TRANSIT', 'Arrived at Madeira hub', 'Madeira Hub Funchal', 10),
   (4, 'OUT FOR DELIVERY', 'Out for delivery in Funchal', 'Madeira Hub Funchal', 10),
   
   -- Order 5: Seller (Porto) -> Distribution Center Porto -> Açores Hub
   (5, 'PROCESSING', 'Order received from seller', 'Dona Maria', NULL),
   (5, 'SHIPPED', 'Picked up from seller', 'Distribution Center Porto', 2),
-  (5, 'IN TRANSIT', 'Package at warehouse, preparing for Açores transit', 'Distribution Center Porto', 2),
+  (5, 'IN TRANSIT', 'Package at warehouse, preparing for air transit', 'Distribution Center Porto', 2),
+  (5, 'IN TRANSIT', 'Arrived at Porto Airport', 'Porto Airport (Cargo)', 13),
+  (5, 'IN TRANSIT', 'Arrived at Ponta Delgada Airport', 'Ponta Delgada Airport (Cargo)', 15),
   (5, 'IN TRANSIT', 'Arrived at Açores hub', 'Açores Hub Ponta Delgada', 11),
 
   -- Order 6: Seller (Évora) -> Regional Center Évora -> Regional Hub Viseu (Delivered)

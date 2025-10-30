@@ -5,6 +5,7 @@ import { OrderStatus } from '@/app/types';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useState, useEffect } from 'react';
+import RoutingMachine from './RoutingMachine';
 
 // Fix for default marker icons in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -40,26 +41,6 @@ interface OrderMapProps {
     sellerAddress?: string;
     sellerLatitude?: number;
     sellerLongitude?: number;
-}
-
-function Polylines({ partialRoute, isDelivered }: { 
-    partialRoute: [number, number][]; 
-    isDelivered: boolean;
-}) {
-    const weight = 2;
-
-    return (
-        <>
-            {partialRoute.length > 1 && (
-                <Polyline
-                    positions={partialRoute}
-                    color={isDelivered ? 'green' : 'blue'}
-                    weight={weight}
-                    opacity={0.7}
-                />
-            )}
-        </>
-    );
 }
 
 export default function OrderMap({
@@ -98,8 +79,22 @@ export default function OrderMap({
 
 
     const latestStatus = orderHistory.length > 0 ? orderHistory[orderHistory.length - 1] : null;
+    const currentStatus = latestStatus?.order_status;
     
-    const isDelivered = latestStatus?.order_status === 'DELIVERED';
+    let routeColor: 'green' | 'red' | 'blue' = 'blue';
+    let shouldZoomOut = false;
+
+    if (currentStatus === 'DELIVERED') {
+        routeColor = 'green';
+        shouldZoomOut = true;
+    } else if (
+        currentStatus === 'CANCELLED' || 
+        currentStatus === 'RETURNED' || 
+        currentStatus === 'FAILED DELIVERY'
+    ) {
+        routeColor = 'red';
+        shouldZoomOut = true;
+    }
 
     const partialRoute: [number, number][] = [];
 
@@ -112,14 +107,14 @@ export default function OrderMap({
     partialRoute.push(...routeCoordinates);
 
     // 3. ONLY add delivery location if the order is marked as delivered
-    if (isDelivered && deliveryCoords) {
+    if (currentStatus === 'DELIVERED' && deliveryCoords) {
         partialRoute.push(deliveryCoords);
     }
 
     useEffect(() => {
         if (!mapInstance) return;
 
-        if (isDelivered) {
+        if (shouldZoomOut) {
             if (allCoords.length > 0) {
                 mapInstance.fitBounds(allCoords, { padding: [50, 50] });
             }
@@ -129,7 +124,15 @@ export default function OrderMap({
                 mapInstance.flyTo(lastKnownLocation, 12, { duration: 1.5 });
             }
         }
-    }, [mapInstance, isDelivered, partialRoute, allCoords]);
+    }, [mapInstance, shouldZoomOut, partialRoute, allCoords]);
+
+    const routeSegments: [[number, number], [number, number]][] = [];
+    for (let i = 0; i < partialRoute.length - 1; i++) {
+        routeSegments.push([partialRoute[i], partialRoute[i + 1]]);
+    }
+
+    // 500km threshold to consider a route as sea route
+    const SEA_ROUTE_THRESHOLD_METERS = 500 * 1000;
 
     if (locationsWithCoords.length === 0 && !sellerCoords) {
         return (
@@ -162,17 +165,40 @@ export default function OrderMap({
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            <Polylines
-                partialRoute={partialRoute}
-                isDelivered={isDelivered}
-            />
+            {routeSegments.map((segment, idx) => {
+                // Calculate straight-line distance (in meters)
+                const distance = L.latLng(segment[0]).distanceTo(L.latLng(segment[1]));
+
+                if (distance > SEA_ROUTE_THRESHOLD_METERS) {
+                    // It's a sea route, draw a straight line
+                    return (
+                        <Polyline
+                            key={idx}
+                            positions={segment}
+                            color={routeColor}
+                            weight={5}
+                            opacity={0.7}
+                            dashArray="5, 10"
+                        />
+                    );
+                } else {
+                    // It's a land route, use the routing machine
+                    return (
+                        <RoutingMachine
+                            key={idx}
+                            waypoints={segment}
+                            routeColor={routeColor}
+                        />
+                    );
+                }
+            })}
 
             {/* Seller marker */}
             {sellerCoords && (
                 <Marker position={sellerCoords} icon={sellerIcon}>
                     <Popup>
                         <div className="text-sm">
-                            <p className="font-bold text-red-600">Seller</p>
+                            <p className="font-bold">Seller</p>
                             <p className="text-xs mt-1">{sellerAddress}</p>
                         </div>
                     </Popup>
@@ -221,7 +247,7 @@ export default function OrderMap({
                         style={{ pointerEvents: 'auto' }}
                         onClick={handleZoomToSeller}
                     >
-                        <p className="text-xs font-semibold text-red-700">Seller:</p>
+                        <p className="text-xs font-semibold text-gray-700">Seller:</p>
                         <p className="text-xs text-gray-600">{sellerAddress}</p>
                         {sellerCoords && (
                             <p className="text-xs text-red-600 mt-1 font-semibold">
