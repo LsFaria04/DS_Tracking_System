@@ -2,33 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-
-interface OrderStatus {
-  order_status: string;
-  note: string;
-  order_location: string;
-}
-
-interface OrderProduct {
-  product_id: number;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-interface OrderData {
-  tracking_code: string;
-  delivery_estimates: string;
-  delivery_address: string;
-  created_at: string;
-  price: string;
-  products: OrderProduct[];
-  statusHistory: OrderStatus[];
-}
+import { OrderData, OrderProduct, OrderStatus } from "@/app/types";
 
 export default function OrderPage() {
   const { id } = useParams();
   const [order, setOrder] = useState<OrderData | null>(null);
+  const [orderHistory, setOrderHistory] = useState<OrderStatus[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,7 +31,41 @@ export default function OrderPage() {
         });
       })
       .finally(() => setLoading(false));
+      fetch(`http://localhost:8080/order/history/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        const o = data.order_status_history;
+        let history: OrderStatus[] = []; 
+        o.forEach((element: any) => {
+            history.push({
+              order_status: element.Order_Status,
+              note: element.Note,
+              order_location: element.Order_Location,
+              timestamp: element.Timestamp_History,
+              order_id: element.Order_ID,
+              order: {
+                tracking_code: element.Order?.Tracking_Code,
+                delivery_estimates: element.Order?.Delivery_Estimates,
+                delivery_address: element.Order?.Delivery_Address,
+                created_at: element.Order?.Created_At,
+                price: element.Order?.Price,
+                products: element.Order?.Products?.map((p: any) => ({
+                  product_id: p.ProductID,
+                  name: p.Product ? p.Product.Name : "Unknown",
+                  price: p.Product ? p.Product.Price : 0,
+                  quantity: p.Quantity
+                })) || [],
+                statusHistory: []
+              }
+            })
+          });
+        setOrderHistory(
+          history
+        );
+      })
+      .finally(() => setLoading(false));
   }, [id]);
+
 
   if (loading) return <p>Loading order...</p>;
   if (!order) return <p>Order not found</p>;
@@ -92,10 +105,11 @@ export default function OrderPage() {
       {/* Tracking Steps */}
       <section>
         <h2 className="font-semibold text-lg mb-2">Tracking History</h2>
+        {orderHistory && orderHistory.length > 0 ? (
         <ul className="space-y-4">
-          {order.statusHistory.map((s, idx) => (
+          {orderHistory.map((s, idx) => (
             <li key={idx} className="flex items-start gap-4">
-              <div className="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0" />
+              <div className="w-6 h-6 rounded-full bg-blue-600 shrink-0" />
               <div>
                 <p className="font-bold">{s.order_status}</p>
                 <p>{s.note} ({s.order_location})</p>
@@ -103,6 +117,9 @@ export default function OrderPage() {
             </li>
           ))}
         </ul>
+      ) : (
+        <p className="text-gray-500 italic">No tracking history available.</p>
+      )}
       </section>
     </div>
   );
