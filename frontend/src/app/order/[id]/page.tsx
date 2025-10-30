@@ -31,37 +31,45 @@ export default function OrderPage() {
         });
       })
       .finally(() => setLoading(false));
+
       fetch(`http://localhost:8080/order/history/${id}`)
       .then(res => res.json())
       .then(data => {
         const o = data.order_status_history;
         let history: OrderStatus[] = []; 
         o.forEach((element: any) => {
-            history.push({
-              order_status: element.Order_Status,
-              note: element.Note,
-              order_location: element.Order_Location,
-              timestamp: element.Timestamp_History,
-              order_id: element.Order_ID,
-              order: {
-                tracking_code: element.Order?.Tracking_Code,
-                delivery_estimates: element.Order?.Delivery_Estimates,
-                delivery_address: element.Order?.Delivery_Address,
-                created_at: element.Order?.Created_At,
-                price: element.Order?.Price,
-                products: element.Order?.Products?.map((p: any) => ({
-                  product_id: p.ProductID,
-                  name: p.Product ? p.Product.Name : "Unknown",
-                  price: p.Product ? p.Product.Price : 0,
-                  quantity: p.Quantity
-                })) || [],
-                statusHistory: []
-              }
-            })
-          });
-        setOrderHistory(
-          history
-        );
+          history.push({
+            order_status: element.Order_Status,
+            note: element.Note,
+            order_location: element.Order_Location,
+            timestamp: element.Timestamp_History,
+            order_id: element.Order_ID,
+            storage_id: element.Storage_ID,
+            Storage: element.Storage ? {
+              Id: element.Storage.Id,
+              Name: element.Storage.Name,
+              Address: element.Storage.Address,
+              Latitude: element.Storage.Latitude,
+              Longitude: element.Storage.Longitude,
+              Created_At: element.Storage.Created_At
+            } : undefined,
+            order: {
+              tracking_code: element.Order?.Tracking_Code,
+              delivery_estimates: element.Order?.Delivery_Estimates,
+              delivery_address: element.Order?.Delivery_Address,
+              created_at: element.Order?.Created_At,
+              price: element.Order?.Price,
+              products: element.Order?.Products?.map((p: any) => ({
+                product_id: p.ProductID,
+                name: p.Product ? p.Product.Name : "Unknown",
+                price: p.Product ? p.Product.Price : 0,
+                quantity: p.Quantity
+              })) || [],
+              statusHistory: []
+            }
+          })
+        });
+        setOrderHistory(history);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -72,6 +80,10 @@ export default function OrderPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-8">
+      {/* Map Placeholder */}
+      <section className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+        <p className="text-gray-500">Map will be displayed here</p>
+      </section>
       {/* Header */}
       <header className="flex justify-between items-start">
         <div>
@@ -106,20 +118,25 @@ export default function OrderPage() {
       <section>
         <h2 className="font-semibold text-lg mb-2">Tracking History</h2>
         {orderHistory && orderHistory.length > 0 ? (
-        <ul className="space-y-4">
-          {orderHistory.map((s, idx) => (
-            <li key={idx} className="flex items-start gap-4">
-              <div className="w-6 h-6 rounded-full bg-blue-600 shrink-0" />
-              <div>
-                <p className="font-bold">{s.order_status}</p>
-                <p>{s.note} ({s.order_location})</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-gray-500 italic">No tracking history available.</p>
-      )}
+          <ul className="space-y-4">
+            {orderHistory.map((s, idx) => (
+              <li key={idx} className="flex items-start gap-4">
+                <div className="w-6 h-6 rounded-full bg-blue-600 shrink-0" />
+                <div>
+                  <p className="font-bold">{s.order_status}</p>
+                  <p>{s.note} ({s.order_location})</p>
+                  {s.Storage && (
+                    <p className="text-sm text-gray-600">
+                      Storage: {s.Storage.Name} - {s.Storage.Address}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500 italic">No tracking history available.</p>
+        )}
       </section>
     </div>
   );

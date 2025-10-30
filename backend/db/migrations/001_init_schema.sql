@@ -3,10 +3,21 @@ DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS order_status_history CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS order_products CASCADE;
+DROP TABLE IF EXISTS storages CASCADE;
 DROP TYPE IF EXISTS order_state CASCADE;
 
 --Create an enum with all the possible order states
 CREATE TYPE order_state AS ENUM ('PROCESSING', 'SHIPPED', 'IN TRANSIT', 'OUT FOR DELIVERY', 'CANCELLED', 'RETURNED', 'FAILED DELIVERY');
+
+-- Storages table: contains warehouse/storage locations with GPS coordinates
+CREATE TABLE storages (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 -- order table: stores basic order information
 CREATE TABLE orders (
@@ -26,7 +37,8 @@ CREATE TABLE order_status_history (
     order_status order_state NOT NULL ,
     timestamp_history TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     note TEXT,
-    order_location TEXT NOT NULL
+    order_location TEXT NOT NULL,
+    storage_id INTEGER REFERENCES storages(id) ON DELETE SET NULL
 );
 
 -- Products table: contains available products for order
