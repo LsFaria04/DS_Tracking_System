@@ -14,6 +14,7 @@ type OrderHandler struct{
 	
 func (h *OrderHandler) GetOrderByID(c *gin.Context){
 	id := c.Param("id")
+
 	var order models.Orders
 	result := h.DB.Preload("Products.Product").First(&order, id)
 
@@ -22,7 +23,7 @@ func (h *OrderHandler) GetOrderByID(c *gin.Context){
         if errors.Is(result.Error, gorm.ErrRecordNotFound) {
             c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
         } else {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
         }
         
     } else{

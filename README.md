@@ -9,7 +9,7 @@ To start developing use the following command to create the docker containers:
 ```shell
 # Use the dev composer file to start postgres, pgadmin and the go containers
 cd backend
-docker compose -f compose.dev.yml up --watch
+docker compose -f compose.dev.yml up  --build --watch # The build flag should only be used when changes are made when the container is not running (ex : pulling code from git)
 ```
 
 The database schema will be automatically initialized on first run. However, to populate with data the development database you need to access pgadmin and run the data seed provided in db/seeds.
@@ -50,7 +50,7 @@ cp .env.example .env
 npm install
 
 # Start dev container with hot reload (preferred)
-docker compose -f compose.dev.yml up --watch
+docker compose -f compose.dev.yml up --build --watch  # The build flag should only be used when changes are made when the container is not running (ex : pulling code from git)
 # Or run without Docker:
 npm run dev
 ```

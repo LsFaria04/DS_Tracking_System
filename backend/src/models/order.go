@@ -12,18 +12,8 @@ type Orders struct{
     Price             float64   `gorm:"not null;default:0"`
 
     Products []OrderProduct `gorm:"foreignKey:OrderID"`
+	Updates []OrderStatusHistory `gorm:"foreignKey:Order_ID"`
 }
 
-type OrderProduct struct {
-    ID        uint    `gorm:"primaryKey"`
-    OrderID   uint    `gorm:"not null"`
-    ProductID uint    `gorm:"not null"`
-    Quantity  int     `gorm:"not null"`
-    Product   *Product `gorm:"foreignKey:ProductID;references:ID"`
-}
 
-type Product struct {
-    ID    uint    `gorm:"primaryKey"`
-    Name  string  `gorm:"not null"`
-    Price float64 `gorm:"not null"`
-}
+
