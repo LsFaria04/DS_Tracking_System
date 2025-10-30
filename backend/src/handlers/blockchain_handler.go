@@ -48,3 +48,24 @@ func (h *BlockchainHandler) GetBlockchainStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *BlockchainHandler) DeployContract(c *gin.Context){
+	address, err := blockchain.DeployContract()
+
+	if err != nil {
+		c.JSON(
+		http.StatusInternalServerError,
+		gin.H{
+			"message": err.Error(),
+	})
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"message": "Contract deployed",
+			"address": address,
+	})
+
+}
+
+

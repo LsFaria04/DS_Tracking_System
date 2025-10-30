@@ -142,3 +142,4 @@ func FormatBalance(balanceWei *big.Int) string {
 	
 	return fmt.Sprintf("%.6f ETH", ethValue)
 }
+
