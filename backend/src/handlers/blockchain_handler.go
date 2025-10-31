@@ -56,7 +56,7 @@ func (h *BlockchainHandler) DeployContract(c *gin.Context){
 		c.JSON(
 		http.StatusInternalServerError,
 		gin.H{
-			"message": err.Error(),
+			"error": err.Error(),
 	})
 	}
 	c.JSON(

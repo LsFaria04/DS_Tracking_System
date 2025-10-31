@@ -3,7 +3,6 @@ package routes
 import (
 	"app/blockchain"
 	"app/handlers"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )

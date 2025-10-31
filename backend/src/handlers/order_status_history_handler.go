@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -49,7 +48,7 @@ func (h *OrderStatusHistoryHandler) AddOrderUpdate(c *gin.Context){
         return
     }
 
-    //get and instance of the contract
+    //get an instance of the contract
     auth := h.Client.Auth
     ethClient := h.Client.EthClient
     addr := os.Getenv("BLOCKCHAIN_CONTRACT_ADDRESS")
@@ -76,7 +75,7 @@ func (h *OrderStatusHistoryHandler) AddOrderUpdate(c *gin.Context){
     hash := sha256.Sum256([]byte(data))
 
     //store the hash in the blockchain
-    if err := StoreUpdateHash(ethClient, auth, contract, uint64(input.Order_ID), hash); err != nil {
+    if err := storeUpdateHash(auth, contract, uint64(input.Order_ID), hash); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
         return
     }
@@ -92,7 +91,7 @@ func (h *OrderStatusHistoryHandler) AddOrderUpdate(c *gin.Context){
 }
 
 //stores the hash in the block chain
-func StoreUpdateHash(client *ethclient.Client, auth *bind.TransactOpts, contract *blockchain.Blockchain, orderID uint64, hash [32]byte) error {
+func storeUpdateHash(auth *bind.TransactOpts, contract *blockchain.Blockchain, orderID uint64, hash [32]byte) error {
     _, err := contract.StoreUpdateHash(auth, big.NewInt(int64(orderID)), hash)
     if err != nil {
         return err
