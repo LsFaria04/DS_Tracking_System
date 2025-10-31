@@ -22,29 +22,6 @@ resource "google_sql_database_instance" "postgres" {
 
   deletion_protection = false # Allow terraform destroy without manual intervention
 }
-resource "google_sql_database_instance" "postgres" {
-  name             = var.db_instance_name
-  database_version = "POSTGRES_17"
-  region           = var.region
-
-  settings {
-    tier = "db-f1-micro" # Smallest instance (~$10/month)
-
-    backup_configuration {
-      enabled = false # Disable backups to save costs during testing
-    }
-
-    ip_configuration {
-      ipv4_enabled = true # Enable public IP for Cloud Run connectivity
-      authorized_networks {
-        name  = "allow-all"
-        value = "0.0.0.0/0" # Allow all IPs (Cloud Run uses dynamic IPs)
-      }
-    }
-  }
-
-  deletion_protection = false # Allow terraform destroy without manual intervention
-}
 
 # Database
 resource "google_sql_database" "database" {
