@@ -3,8 +3,10 @@ package handlers
 import (
 	"app/blockchain"
 	"app/models"
+	"math/big"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gin-gonic/gin"
 )
 
@@ -66,6 +68,15 @@ func (h *BlockchainHandler) DeployContract(c *gin.Context){
 			"address": address,
 	})
 
+}
+
+//stores the hash in the block chain
+func StoreUpdateHash(auth *bind.TransactOpts, contract *blockchain.Blockchain, orderID uint64, hash [32]byte) error {
+    _, err := contract.StoreUpdateHash(auth, big.NewInt(int64(orderID)), hash)
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"app/blockchain"
 	"app/models"
+	"app/requestModels"
 	"crypto/sha256"
 	"fmt"
 	"math/big"
@@ -19,15 +20,7 @@ type VerificationHandler struct {
 	Client *blockchain.Client
 }
 
-type VerificationResponse struct {
-	Verified         bool     `json:"verified"`
-	TotalUpdates     int      `json:"total_updates"`
-	VerifiedUpdates  int      `json:"verified_updates"`
-	BlockchainHashes int      `json:"blockchain_hashes"`
-	Status           string   `json:"status"`
-	Message          string   `json:"message"`
-	Mismatches       []string `json:"mismatches,omitempty"`
-}
+
 
 // VerifyOrder verifies all updates for an order against blockchain
 func (h *VerificationHandler) VerifyOrder(c *gin.Context) {
@@ -63,7 +56,7 @@ func (h *VerificationHandler) VerifyOrder(c *gin.Context) {
 		return
 	}
 
-	response := VerificationResponse{
+	response := requestModels.VerificationResponse{
 		TotalUpdates:     len(orderHistory),
 		BlockchainHashes: len(blockchainHashes),
 		Mismatches:       []string{},

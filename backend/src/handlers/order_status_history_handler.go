@@ -6,12 +6,9 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"math/big"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -74,7 +71,7 @@ func (h *OrderStatusHistoryHandler) AddOrderUpdate(c *gin.Context){
     hash := sha256.Sum256([]byte(data))
 
     //store the hash in the blockchain
-    if err := storeUpdateHash(auth, contract, uint64(input.Order_ID), hash); err != nil {
+    if err := StoreUpdateHash(auth, contract, uint64(input.Order_ID), hash); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
         return
     }
@@ -89,11 +86,3 @@ func (h *OrderStatusHistoryHandler) AddOrderUpdate(c *gin.Context){
     c.JSON(http.StatusOK, gin.H{"message": "Update stored successfully"})
 }
 
-//stores the hash in the block chain
-func storeUpdateHash(auth *bind.TransactOpts, contract *blockchain.Blockchain, orderID uint64, hash [32]byte) error {
-    _, err := contract.StoreUpdateHash(auth, big.NewInt(int64(orderID)), hash)
-    if err != nil {
-        return err
-    }
-    return nil
-}

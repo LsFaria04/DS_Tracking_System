@@ -36,6 +36,7 @@ func (h *OrderHandler) GetOrderByID(c *gin.Context){
         }
         
     } else{
+		fmt.Printf("Delivery: %s", order.Delivery_Estimate)
 		c.JSON(http.StatusOK,gin.H{"order" : order})
 	}
 	
@@ -65,14 +66,21 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
 	order.Seller_ID = input.SellerId
 	order.Seller_Latitude = input.SellerLatitude
 	order.Seller_Longitude = input.SellerLongitude
+	order.Created_At = time.Now()
 
-	result := h.DB.Create(&order)
+	
+	//the next operations are made inside a transaction to ensure atomicity
+	transaction := h.DB.Begin()
+
+	result := transaction.Create(&order)
 	if result.Error != nil {
         if errors.Is(result.Error, gorm.ErrRecordNotFound) {
             c.JSON(http.StatusNotFound, gin.H{"error": "Order not Created"})
+			transaction.Rollback()
 			return
         } else {
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			transaction.Rollback()
 			return
         }
 	}
@@ -84,13 +92,15 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
 		orderProduct.ProductID = productRequest.ProductID
 		orderProduct.Quantity = productRequest.Quantity
 
-		result := h.DB.Create(&orderProduct)
+		result := transaction.Create(&orderProduct)
 		if result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Order was created with errors in the products"})
+				transaction.Rollback()
 				return
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+				transaction.Rollback()
 				return
 			}
 		}
@@ -107,6 +117,7 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
     contract, err := blockchain.GetContractInstance(ethClient, addr)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		transaction.Rollback()
         return
     }
 
@@ -127,17 +138,21 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
     hash := sha256.Sum256([]byte(data))
 
     //store the hash in the blockchain
-    if err := storeUpdateHash(auth, contract, uint64(statusHistory.Order_ID), hash); err != nil {
+    if err := StoreUpdateHash(auth, contract, uint64(statusHistory.Order_ID), hash); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
+		transaction.Rollback()
         return
     }
 
     //store the update into the database
-    if err := h.DB.Create(&statusHistory).Error; err != nil {
+    if err := transaction.Create(&statusHistory).Error; err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
+		transaction.Rollback()
         return
     }
 
+	//commits the transaction
+	transaction.Commit()
 
     c.JSON(http.StatusOK, gin.H{"message": "Update stored successfully"})
 

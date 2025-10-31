@@ -27,7 +27,7 @@ interface OrderStatus {
 
 interface OrderData {
   tracking_code: string;
-  delivery_estimates: string;
+  delivery_estimate: string;
   delivery_address: string;
   delivery_latitude?: number;
   delivery_longitude?: number;
@@ -40,4 +40,61 @@ interface OrderData {
   statusHistory: OrderStatus[];
 }
 
-export type {OrderData, OrderProduct, OrderStatus, Storage}
+// Backend API response types
+interface BackendProduct {
+  ID: number;
+  Name: string;
+  Price: number;
+}
+
+interface BackendOrderProduct {
+  ProductID: number;
+  Quantity: number;
+  Product?: BackendProduct;
+}
+
+interface BackendStorage {
+  Id: number;
+  Name: string;
+  Address: string;
+  Latitude: number;
+  Longitude: number;
+  Created_At: string;
+}
+
+interface BackendOrder {
+  Tracking_Code: string;
+  Delivery_Estimate: string;
+  Delivery_Address: string;
+  Delivery_Latitude?: number;
+  Delivery_Longitude?: number;
+  Seller_Address?: string;
+  Seller_Latitude?: number;
+  Seller_Longitude?: number;
+  Created_At: string;
+  Price: number;
+  Products?: BackendOrderProduct[];
+}
+
+interface BackendOrderStatus {
+  Order_Status: string;
+  Note: string;
+  Order_Location: string;
+  Timestamp_History: string;
+  Order_ID: number;
+  Storage_ID?: number;
+  Storage?: BackendStorage;
+  Order?: BackendOrder;
+}
+
+interface VerificationResult {
+  verified: boolean;
+  total_updates: number;
+  verified_updates: number;
+  blockchain_hashes: number;
+  status: string;
+  message: string;
+  mismatches?: string[];
+}
+
+export type {OrderData, OrderProduct, OrderStatus, Storage, VerificationResult, BackendOrderStatus, BackendOrder, BackendStorage, BackendOrderProduct, BackendProduct}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { OrderData, OrderStatus } from "@/app/types";
+import { BackendOrder, BackendOrderProduct, BackendOrderStatus, OrderData, OrderStatus, VerificationResult } from "@/app/types";
 import dynamic from 'next/dynamic';
 
 // Import map component dynamically to avoid SSR issues
@@ -15,62 +15,7 @@ const OrderMap = dynamic(() => import('@/app/components/OrderMap'), {
   )
 });
 
-// Backend API response types
-interface BackendProduct {
-  ID: number;
-  Name: string;
-  Price: number;
-}
 
-interface BackendOrderProduct {
-  ProductID: number;
-  Quantity: number;
-  Product?: BackendProduct;
-}
-
-interface BackendStorage {
-  Id: number;
-  Name: string;
-  Address: string;
-  Latitude: number;
-  Longitude: number;
-  Created_At: string;
-}
-
-interface BackendOrder {
-  Tracking_Code: string;
-  Delivery_Estimates: string;
-  Delivery_Address: string;
-  Delivery_Latitude?: number;
-  Delivery_Longitude?: number;
-  Seller_Address?: string;
-  Seller_Latitude?: number;
-  Seller_Longitude?: number;
-  Created_At: string;
-  Price: number;
-  Products?: BackendOrderProduct[];
-}
-
-interface BackendOrderStatus {
-  Order_Status: string;
-  Note: string;
-  Order_Location: string;
-  Timestamp_History: string;
-  Order_ID: number;
-  Storage_ID?: number;
-  Storage?: BackendStorage;
-  Order?: BackendOrder;
-}
-
-interface VerificationResult {
-  verified: boolean;
-  total_updates: number;
-  verified_updates: number;
-  blockchain_hashes: number;
-  status: string;
-  message: string;
-  mismatches?: string[];
-}
 
 export default function OrderPage() {
   const { id } = useParams();
@@ -91,7 +36,7 @@ export default function OrderPage() {
         const o = data.order as BackendOrder;
         setOrder({
           tracking_code: o.Tracking_Code,
-          delivery_estimates: o.Delivery_Estimates,
+          delivery_estimate: o.Delivery_Estimate,
           delivery_address: o.Delivery_Address,
           delivery_latitude: o.Delivery_Latitude,
           delivery_longitude: o.Delivery_Longitude,
@@ -140,7 +85,7 @@ export default function OrderPage() {
             } : undefined,
             order: element.Order ? {
               tracking_code: element.Order.Tracking_Code,
-              delivery_estimates: element.Order.Delivery_Estimates,
+              delivery_estimate: element.Order.Delivery_Estimate,
               delivery_address: element.Order.Delivery_Address,
               delivery_latitude: element.Order.Delivery_Latitude,
               delivery_longitude: element.Order.Delivery_Longitude,
@@ -317,7 +262,7 @@ export default function OrderPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-gray-500 dark:text-gray-400 w-28">Est. Delivery</span>
-                <span className="text-gray-900 dark:text-white">{new Date(order.delivery_estimates).toLocaleDateString()}</span>
+                <span className="text-gray-900 dark:text-white">{new Date(order.delivery_estimate).toLocaleDateString()}</span>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-gray-500 dark:text-gray-400 w-28">Delivery To</span>

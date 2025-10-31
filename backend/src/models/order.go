@@ -11,7 +11,7 @@ type Orders struct{
     Seller_Longitude    float64  `gorm:"type:decimal(11,8)"`
     Created_At          time.Time
     Tracking_Code       string    `gorm:"unique;not null"`
-    Delivery_Estimate  time.Time
+    Delivery_Estimate   time.Time
     Delivery_Address    string    `gorm:"not null"`
     Delivery_Latitude   float64  `gorm:"type:decimal(10,8)"`
     Delivery_Longitude  float64  `gorm:"type:decimal(11,8)"`
