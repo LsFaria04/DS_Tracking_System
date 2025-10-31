@@ -77,12 +77,16 @@ export default function OrderPage() {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [orderHistory, setOrderHistory] = useState<OrderStatus[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/${id}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch order');
+        return res.json();
+      })
       .then(data => {
         const o = data.order as BackendOrder;
         setOrder({
@@ -105,9 +109,16 @@ export default function OrderPage() {
           statusHistory: []
         });
       })
+      .catch(() => {
+        setError('Failed to load order. Please try again.');
+      })
       .finally(() => setLoading(false));
+      
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/history/${id}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch order history');
+        return res.json();
+      })
       .then(data => {
         const o = data.order_status_history as BackendOrderStatus[];
         const history: OrderStatus[] = []; 
@@ -150,7 +161,10 @@ export default function OrderPage() {
         });
         setOrderHistory(history);
       })
-      .finally(() => setLoading(false));
+      .catch(() => {
+        // History is optional, don't set error if it fails
+        console.warn('Failed to load order history');
+      });
   }, [id]);
 
   const handleVerifyBlockchain = async () => {
@@ -248,6 +262,22 @@ export default function OrderPage() {
     </div>
   );
   
+  if (error) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+      <div className="text-center max-w-md">
+        <p className="text-6xl mb-4"></p>
+        <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Unable to load order</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+  
   if (!order) return (
     <div className="min-h-screen flex flex-col items-center justify-center">
       <div className="text-center">
@@ -318,10 +348,7 @@ export default function OrderPage() {
                     Verifying...
                   </>
                 ) : (
-                  <>
-                    <span>🔗</span>
-                    Verify on Blockchain
-                  </>
+                  'Verify on Blockchain'
                 )}
               </button>
               
@@ -334,10 +361,6 @@ export default function OrderPage() {
                     : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
                 }`}>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-lg">
-                      {verificationResult.status === 'VERIFIED' ? '✅' : 
-                       verificationResult.status === 'ERROR' ? '❌' : '⚠️'}
-                    </span>
                     <span className={`font-semibold ${
                       verificationResult.status === 'VERIFIED'
                         ? 'text-green-700 dark:text-green-300'
