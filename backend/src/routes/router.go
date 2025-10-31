@@ -15,6 +15,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 	orderProductHandler := handlers.OrderProductHandler{DB: db}
 	productHandler := handlers.ProductHandler{DB: db}
 	blockchainHandler := handlers.BlockchainHandler{}
+	verificationHandler := handlers.VerificationHandler{DB: db, Client: blockChainClient}
 
 	//routes for the order history
 	router.GET("/order/history/:order_id", orderStatusHistory.GetOrderStatusByOrderID)
@@ -22,6 +23,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 
 	//routes for the orders
 	router.GET("/order/:id", orderHandler.GetOrderByID)
+	router.GET("/order/verify/:order_id", verificationHandler.VerifyOrder)
 
 	//routes for order products (using order-products path to avoid conflicts)
 	router.GET("/order-products", orderProductHandler.GetOrderProducts) // Query param: ?order_id=X

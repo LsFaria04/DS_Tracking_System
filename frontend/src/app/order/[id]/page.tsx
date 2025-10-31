@@ -62,11 +62,23 @@ interface BackendOrderStatus {
   Order?: BackendOrder;
 }
 
+interface VerificationResult {
+  verified: boolean;
+  total_updates: number;
+  verified_updates: number;
+  blockchain_hashes: number;
+  status: string;
+  message: string;
+  mismatches?: string[];
+}
+
 export default function OrderPage() {
   const { id } = useParams();
   const [order, setOrder] = useState<OrderData | null>(null);
   const [orderHistory, setOrderHistory] = useState<OrderStatus[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verifying, setVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/${id}`)
@@ -140,6 +152,40 @@ export default function OrderPage() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleVerifyBlockchain = async () => {
+    setVerifying(true);
+    setVerificationResult(null);
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/verify/${id}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setVerificationResult(data);
+      } else {
+        setVerificationResult({
+          verified: false,
+          total_updates: 0,
+          verified_updates: 0,
+          blockchain_hashes: 0,
+          status: 'ERROR',
+          message: data.error || 'Failed to verify order',
+        });
+      }
+    } catch {
+      setVerificationResult({
+        verified: false,
+        total_updates: 0,
+        verified_updates: 0,
+        blockchain_hashes: 0,
+        status: 'ERROR',
+        message: 'Network error while verifying',
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
 
 
   if (loading) return (
@@ -257,6 +303,67 @@ export default function OrderPage() {
             <div className="text-right w-full pt-4 border-t border-gray-200 dark:border-gray-800">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total</p>
               <p className="text-3xl font-semibold text-gray-900 dark:text-white">{order.price}€</p>
+            </div>
+            
+            {/* Blockchain Verification */}
+            <div className="w-full pt-4 border-t border-gray-200 dark:border-gray-800">
+              <button
+                onClick={handleVerifyBlockchain}
+                disabled={verifying}
+                className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {verifying ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <span>🔗</span>
+                    Verify on Blockchain
+                  </>
+                )}
+              </button>
+              
+              {verificationResult && (
+                <div className={`mt-3 p-3 rounded-lg text-sm ${
+                  verificationResult.status === 'VERIFIED' 
+                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                    : verificationResult.status === 'ERROR'
+                    ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                    : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
+                }`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">
+                      {verificationResult.status === 'VERIFIED' ? '✅' : 
+                       verificationResult.status === 'ERROR' ? '❌' : '⚠️'}
+                    </span>
+                    <span className={`font-semibold ${
+                      verificationResult.status === 'VERIFIED'
+                        ? 'text-green-700 dark:text-green-300'
+                        : verificationResult.status === 'ERROR'
+                        ? 'text-red-700 dark:text-red-300'
+                        : 'text-orange-700 dark:text-orange-300'
+                    }`}>
+                      {verificationResult.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <p className={`text-xs ${
+                    verificationResult.status === 'VERIFIED'
+                      ? 'text-green-600 dark:text-green-400'
+                      : verificationResult.status === 'ERROR'
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-orange-600 dark:text-orange-400'
+                  }`}>
+                    {verificationResult.message}
+                  </p>
+                  {verificationResult.status !== 'ERROR' && (
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                      {verificationResult.verified_updates}/{verificationResult.total_updates} updates verified
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
