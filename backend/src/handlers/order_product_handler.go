@@ -117,7 +117,7 @@ func (h *OrderProductHandler) UpdateOrderProduct(c *gin.Context) {
 	}
 
 	var updateData struct {
-		Quantity int `json:"quantity" binding:"required"`
+		Quantity uint `json:"quantity" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&updateData); err != nil {

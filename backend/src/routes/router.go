@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchain.Client) {
-	orderHandler := handlers.OrderHandler{DB: db}
+	orderHandler := handlers.OrderHandler{DB: db, Client: blockChainClient}
 	orderStatusHistory := handlers.OrderStatusHistoryHandler{DB: db, Client: blockChainClient}
 	storageHandler := handlers.StorageHandler{DB: db}
 	orderProductHandler := handlers.OrderProductHandler{DB: db}
@@ -23,6 +23,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 	//routes for the orders
 	router.GET("/order/:id", orderHandler.GetOrderByID)
 	router.GET("/order/verify/:order_id", verificationHandler.VerifyOrder)
+	router.POST("/order/add", orderHandler.AddOrder)
 
 	//routes for order products (using order-products path to avoid conflicts)
 	router.GET("/order-products", orderProductHandler.GetOrderProducts) // Query param: ?order_id=X

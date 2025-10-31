@@ -64,12 +64,11 @@ func (h *OrderStatusHistoryHandler) AddOrderUpdate(c *gin.Context){
     }
 
     //hash the main components of the request
-    data := fmt.Sprintf("%d|%s|%s|%s|%d",
+    data := fmt.Sprintf("%d|%s|%s|%s",
         input.Order_ID,
         input.Order_Status,
         input.Timestamp_History.Format(time.RFC3339),
         input.Order_Location,
-        input.Storage_ID,
     )
 
     hash := sha256.Sum256([]byte(data))

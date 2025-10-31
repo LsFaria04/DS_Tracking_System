@@ -73,12 +73,11 @@ func (h *VerificationHandler) VerifyOrder(c *gin.Context) {
 	verifiedCount := 0
 	for i, update := range orderHistory {
 		// Compute hash for this update (same logic as when storing)
-		data := fmt.Sprintf("%d|%s|%s|%s|%d",
+		data := fmt.Sprintf("%d|%s|%s|%s",
 			update.Order_ID,
 			update.Order_Status,
 			update.Timestamp_History.Format(time.RFC3339),
 			update.Order_Location,
-			update.Storage_ID,
 		)
 		computedHash := sha256.Sum256([]byte(data))
 
