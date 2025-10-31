@@ -143,14 +143,72 @@ export default function OrderPage() {
 
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-gray-500 dark:text-gray-400">Loading order...</p>
+    <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
+      {/* Map skeleton */}
+      <div className="w-full h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse"></div>
+      
+      {/* Header skeleton */}
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+        <div className="flex flex-col md:flex-row md:justify-between gap-6">
+          <div className="flex-1 space-y-4">
+            <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded-lg w-48 animate-pulse"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-64 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-64 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-96 animate-pulse"></div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 min-w-[200px]">
+            <div className="h-16 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
+            <div className="h-20 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Products skeleton */}
+      <div>
+        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-32 mb-6 animate-pulse"></div>
+        <div className="space-y-3">
+          {[1, 2].map(i => (
+            <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
+              <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-4 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-32 animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Tracking history skeleton */}
+      <div>
+        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-40 mb-6 animate-pulse"></div>
+        <div className="space-y-0">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="relative flex pb-6">
+              <div className="relative flex flex-col items-center w-12 shrink-0">
+                <div className="w-4 h-4 bg-gray-300 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                {i < 3 && <div className="w-0.5 flex-1 bg-gray-300 dark:bg-gray-700"></div>}
+              </div>
+              <div className="flex-1">
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
+                  <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-32 mb-3 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-64 mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-48 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
   
   if (!order) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-gray-500 dark:text-gray-400">Order not found</p>
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="text-center">
+        <p className="text-6xl mb-4"></p>
+        <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Order not found</p>
+        <p className="text-gray-500 dark:text-gray-400">The order you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+      </div>
     </div>
   );
 
