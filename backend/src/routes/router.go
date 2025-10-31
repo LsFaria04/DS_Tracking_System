@@ -8,12 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchain.Client){
-	orderHandler := handlers.OrderHandler{DB : db}
-	orderStatusHistory := handlers.OrderStatusHistoryHandler{DB : db, Client: blockChainClient}
-	storageHandler := handlers.StorageHandler{DB : db}
-	orderProductHandler := handlers.OrderProductHandler{DB : db}
-	productHandler := handlers.ProductHandler{DB : db}
+func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchain.Client) {
+	orderHandler := handlers.OrderHandler{DB: db}
+	orderStatusHistory := handlers.OrderStatusHistoryHandler{DB: db, Client: blockChainClient}
+	storageHandler := handlers.StorageHandler{DB: db}
+	orderProductHandler := handlers.OrderProductHandler{DB: db}
+	productHandler := handlers.ProductHandler{DB: db}
 	blockchainHandler := handlers.BlockchainHandler{}
 
 	//routes for the order history
@@ -35,7 +35,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 	router.GET("/products/:id", productHandler.GetProductByID)
 
 	//routes for the storages
-    router.GET("/storages", storageHandler.GetAllStorages)
+	router.GET("/storages", storageHandler.GetAllStorages)
 
 	// Blockchain endpoints (should not be public in the production)
 	router.GET("/blockchain/status", blockchainHandler.GetBlockchainStatus)
@@ -43,13 +43,13 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 
 	//old routes for testing
 	router.GET("/ping", func(c *gin.Context) {
-    c.JSON(200, gin.H{
-      "message": "pong",
-    })
-  })
-  router.GET("/", func(c *gin.Context) {
-    c.JSON(200, gin.H{
-      "message": "Online", // "DS is awesome!"
-    })
-  })
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Online", // "DS is awesome!"
+		})
+	})
 }

@@ -4,18 +4,19 @@ import (
 	"app/models"
 	"errors"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-type OrderProductHandler struct{
+type OrderProductHandler struct {
 	DB *gorm.DB
 }
 
 // GetOrderProducts retrieves all products for a specific order
-func (h *OrderProductHandler) GetOrderProducts(c *gin.Context){
+func (h *OrderProductHandler) GetOrderProducts(c *gin.Context) {
 	orderID := c.Query("order_id")
-	
+
 	if orderID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "order_id query parameter is required"})
 		return
@@ -33,7 +34,7 @@ func (h *OrderProductHandler) GetOrderProducts(c *gin.Context){
 }
 
 // GetOrderProductByID retrieves a specific order product by ID
-func (h *OrderProductHandler) GetOrderProductByID(c *gin.Context){
+func (h *OrderProductHandler) GetOrderProductByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var orderProduct models.OrderProduct
@@ -52,9 +53,9 @@ func (h *OrderProductHandler) GetOrderProductByID(c *gin.Context){
 }
 
 // AddOrderProduct adds a new product to an order
-func (h *OrderProductHandler) AddOrderProduct(c *gin.Context){
+func (h *OrderProductHandler) AddOrderProduct(c *gin.Context) {
 	var orderProduct models.OrderProduct
-	
+
 	if err := c.ShouldBindJSON(&orderProduct); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -102,7 +103,7 @@ func (h *OrderProductHandler) AddOrderProduct(c *gin.Context){
 }
 
 // UpdateOrderProduct updates the quantity of an order product
-func (h *OrderProductHandler) UpdateOrderProduct(c *gin.Context){
+func (h *OrderProductHandler) UpdateOrderProduct(c *gin.Context) {
 	id := c.Param("id")
 
 	var orderProduct models.OrderProduct
@@ -142,7 +143,7 @@ func (h *OrderProductHandler) UpdateOrderProduct(c *gin.Context){
 }
 
 // DeleteOrderProduct removes a product from an order
-func (h *OrderProductHandler) DeleteOrderProduct(c *gin.Context){
+func (h *OrderProductHandler) DeleteOrderProduct(c *gin.Context) {
 	id := c.Param("id")
 
 	var orderProduct models.OrderProduct

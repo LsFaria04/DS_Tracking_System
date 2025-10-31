@@ -142,11 +142,20 @@ export default function OrderPage() {
   }, [id]);
 
 
-  if (loading) return <p>Loading order...</p>;
-  if (!order) return <p>Order not found</p>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-500 dark:text-gray-400">Loading order...</p>
+    </div>
+  );
+  
+  if (!order) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-500 dark:text-gray-400">Order not found</p>
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto p-8 space-y-8">
+    <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
       {/* Map */}
       <section>
         {orderHistory && (
@@ -163,77 +172,155 @@ export default function OrderPage() {
       </section>
 
       {/* Header */}
-      <header className="flex justify-between items-start">
-        <div>
-          <p className="font-bold">Order Number: {id}</p>
-          <p>Order date: {new Date(order.created_at).toDateString()}</p>
-          <p>Delivery: {order.delivery_address}</p>
-          <p>Price: {order.price}€</p>
-          <p>Estimated Delivery: {new Date(order.delivery_estimates).toDateString()}</p>
-        </div>
-        <div>
-          <p className="font-bold">Tracking Code:</p>
-          <p>{order.tracking_code}</p>
+      <header className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
+          <div className="flex-1 space-y-4">
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Order {id}</h1>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-gray-500 dark:text-gray-400 w-28">Ordered</span>
+                <span className="text-gray-900 dark:text-white">{new Date(order.created_at).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-gray-500 dark:text-gray-400 w-28">Est. Delivery</span>
+                <span className="text-gray-900 dark:text-white">{new Date(order.delivery_estimates).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-gray-500 dark:text-gray-400 w-28">Delivery To</span>
+                <span className="text-gray-900 dark:text-white">{order.delivery_address}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-start md:items-end gap-4 min-w-[200px]">
+            <div className="text-right w-full">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tracking Code</p>
+              <p className="text-base font-mono font-medium text-gray-900 dark:text-white">{order.tracking_code}</p>
+            </div>
+            <div className="text-right w-full pt-4 border-t border-gray-200 dark:border-gray-800">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total</p>
+              <p className="text-3xl font-semibold text-gray-900 dark:text-white">{order.price}€</p>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Products */}
       <section>
-        <h2 className="font-semibold text-lg mb-4">Order Items</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Order Items</h2>
         {order.products && order.products.length > 0 ? (
           <div className="space-y-3">
             {order.products.map((p, idx) => (
-              <div key={p.product_id || idx} className="border border-gray-300 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-gray-800 dark:border-gray-700">
-                <div className="flex justify-between items-start">
+              <div key={p.product_id || idx} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div className="flex-1">
-                    <p className="font-semibold text-lg">{p.name}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Product ID: #{p.product_id}</p>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">{p.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Product ID: {p.product_id}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-blue-600 dark:text-blue-400">{p.price}€</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">per unit</p>
+                    <p className="text-xl font-semibold text-gray-900 dark:text-white">{p.price}€</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">per unit</p>
                   </div>
                 </div>
-                <div className="mt-3 flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-gray-700 dark:text-gray-300">Quantity: <span className="font-semibold">{p.quantity}</span></p>
-                  <p className="font-semibold text-gray-900 dark:text-gray-100">Subtotal: {(p.price * p.quantity).toFixed(2)}€</p>
+                
+                <div className="mt-4 flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Quantity</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {p.quantity}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">Subtotal</span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-white">{(p.price * p.quantity).toFixed(2)}€</span>
+                  </div>
                 </div>
               </div>
             ))}
-            <div className="mt-4 pt-4 border-t-2 border-gray-300 dark:border-gray-700">
+            
+            {/* Total summary */}
+            <div className="mt-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
               <div className="flex justify-between items-center">
-                <p className="text-xl font-bold">Total Order Value:</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{order.price}€</p>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Total</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{order.products.length} item{order.products.length !== 1 ? 's' : ''}</p>
+                </div>
+                <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+                  {order.price}€
+                </p>
               </div>
             </div>
           </div>
         ) : (
-          <p className="text-gray-500 italic">No products in this order.</p>
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl">
+            <p className="text-gray-500 dark:text-gray-400">No products in this order.</p>
+          </div>
         )}
       </section>
 
       {/* Tracking Steps */}
       <section>
-        <h2 className="font-semibold text-lg mb-2">Tracking History</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Tracking History</h2>
         {orderHistory && orderHistory.length > 0 ? (
-          <ul className="space-y-4">
-            {orderHistory.map((s, idx) => (
-              <li key={idx} className="flex items-start gap-4">
-                <div className="w-6 h-6 rounded-full bg-blue-600 shrink-0" />
-                <div>
-                  <p className="font-bold">{s.order_status}</p>
-                  <p>{s.note} ({s.order_location})</p>
-                  {s.Storage && (
-                    <p className="text-sm text-gray-600">
-                      Storage: {s.Storage.Name} - {s.Storage.Address}
-                    </p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="relative pl-8">
+            {/* Vertical connecting line - perfectly centered */}
+            <div className="absolute left-1.5 top-3 bottom-3 w-px bg-gray-300 dark:bg-gray-700"></div>
+            
+            <ul className="space-y-4">
+              {orderHistory.map((s, idx) => {
+                const isFirst = idx === 0;
+                const statusColors = {
+                  'PROCESSING': 'bg-blue-500',
+                  'SHIPPED': 'bg-blue-500',
+                  'IN TRANSIT': 'bg-blue-500',
+                  'OUT FOR DELIVERY': 'bg-blue-500',
+                  'DELIVERED': 'bg-green-500',
+                  'CANCELLED': 'bg-red-500',
+                  'RETURNED': 'bg-orange-500',
+                  'FAILED DELIVERY': 'bg-red-500'
+                };
+                const dotColor = statusColors[s.order_status as keyof typeof statusColors] || 'bg-gray-400';
+                const dotSize = isFirst ? 'w-3 h-3' : 'w-2.5 h-2.5';
+                
+                return (
+                  <li key={idx} className="relative flex items-start gap-4">
+                    {/* Simple status dot - positioned absolutely for perfect alignment */}
+                    <div className={`absolute -left-8 top-2 ${dotSize} rounded-full ${dotColor} z-10`}></div>
+                    
+                    {/* Content card */}
+                    <div className="flex-1 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-medium text-base text-gray-900 dark:text-white">{s.order_status}</h3>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(s.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{s.note}</p>
+                      
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {s.order_location}
+                      </div>
+                      
+                      {s.Storage && (
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+                          <div className="text-sm">
+                            <p className="font-medium text-gray-900 dark:text-white">{s.Storage.Name}</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{s.Storage.Address}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         ) : (
-          <p className="text-gray-500 italic">No tracking history available.</p>
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl">
+            <p className="text-gray-500 dark:text-gray-400">No tracking history available yet.</p>
+          </div>
         )}
       </section>
     </div>
