@@ -263,60 +263,76 @@ export default function OrderPage() {
       <section>
         <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Tracking History</h2>
         {orderHistory && orderHistory.length > 0 ? (
-          <div className="relative pl-8">
-            {/* Vertical connecting line - perfectly centered */}
-            <div className="absolute left-1.5 top-3 bottom-3 w-px bg-gray-300 dark:bg-gray-700"></div>
-            
-            <ul className="space-y-4">
+            <ul className="space-y-0">
               {orderHistory.map((s, idx) => {
                 const isFirst = idx === 0;
-                const statusColors = {
-                  'PROCESSING': 'bg-blue-500',
-                  'SHIPPED': 'bg-blue-500',
-                  'IN TRANSIT': 'bg-blue-500',
-                  'OUT FOR DELIVERY': 'bg-blue-500',
-                  'DELIVERED': 'bg-green-500',
-                  'CANCELLED': 'bg-red-500',
-                  'RETURNED': 'bg-orange-500',
-                  'FAILED DELIVERY': 'bg-red-500'
+                const isLast = idx === orderHistory.length - 1;
+                
+                // Define status colors
+                const statusInfo = {
+                  'PROCESSING': { color: 'bg-blue-500', border: 'border-blue-500' },
+                  'SHIPPED': { color: 'bg-blue-500', border: 'border-blue-500' },
+                  'IN TRANSIT': { color: 'bg-blue-500', border: 'border-blue-500' },
+                  'OUT FOR DELIVERY': { color: 'bg-blue-500', border: 'border-blue-500' },
+                  'DELIVERED': { color: 'bg-green-500', border: 'border-green-500' },
+                  'CANCELLED': { color: 'bg-red-500', border: 'border-red-500' },
+                  'RETURNED': { color: 'bg-orange-500', border: 'border-orange-500' },
+                  'FAILED DELIVERY': { color: 'bg-red-500', border: 'border-red-500' }
                 };
-                const dotColor = statusColors[s.order_status as keyof typeof statusColors] || 'bg-gray-400';
-                const dotSize = isFirst ? 'w-3 h-3' : 'w-2.5 h-2.5';
+                
+                const status = statusInfo[s.order_status as keyof typeof statusInfo] || { 
+                  color: 'bg-gray-400',
+                  border: 'border-gray-400'
+                };
                 
                 return (
-                  <li key={idx} className="relative flex items-start gap-4">
-                    {/* Simple status dot - positioned absolutely for perfect alignment */}
-                    <div className={`absolute -left-8 top-2 ${dotSize} rounded-full ${dotColor} z-10`}></div>
+                  <li key={idx} className="relative flex">
+                    {/* Left timeline column */}
+                    <div className="relative flex flex-col items-center w-12 shrink-0">
+                      {/* Top connecting line - only if not first */}
+                      {!isFirst && (
+                        <div className="w-0.5 h-6 bg-gray-300 dark:bg-gray-700"></div>
+                      )}
+                      
+                      {/* The dot - larger for the last (current state) one */}
+                      <div className={`${status.color} rounded-full ${isLast ? 'w-8 h-8' : 'w-6 h-6'} shrink-0 border-4 border-white dark:border-gray-950`}></div>
+                      
+                      {/* Bottom connecting line - only if not last */}
+                      {!isLast && (
+                        <div className="w-0.5 flex-1 bg-gray-300 dark:bg-gray-700"></div>
+                      )}
+                    </div>
                     
                     {/* Content card */}
-                    <div className="flex-1 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium text-base text-gray-900 dark:text-white">{s.order_status}</h3>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(s.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                      
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{s.note}</p>
-                      
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {s.order_location}
-                      </div>
-                      
-                      {s.Storage && (
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
-                          <div className="text-sm">
-                            <p className="font-medium text-gray-900 dark:text-white">{s.Storage.Name}</p>
-                            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{s.Storage.Address}</p>
-                          </div>
+                    <div className={`flex-1 pb-6 ${isLast ? 'pb-0' : ''}`}>
+                      <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-base text-gray-900 dark:text-white">{s.order_status}</h3>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-4">
+                            {new Date(s.timestamp).toLocaleString()}
+                          </span>
                         </div>
-                      )}
+                        
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{s.note}</p>
+                        
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {s.order_location}
+                        </div>
+                        
+                        {s.Storage && (
+                          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+                            <div className="text-sm">
+                              <p className="font-medium text-gray-900 dark:text-white">{s.Storage.Name}</p>
+                              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">{s.Storage.Address}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </li>
                 );
               })}
             </ul>
-          </div>
         ) : (
           <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl">
             <p className="text-gray-500 dark:text-gray-400">No tracking history available yet.</p>
