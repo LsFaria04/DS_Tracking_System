@@ -1,6 +1,5 @@
 name: Deploy to GCP
 
-
 on:
   # Trigger when pushing to deploy branch
   push:
