@@ -6,3 +6,6 @@ terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/terraform.tfvars
 terraform/*.tfvars
+
+# Act secrets file (for local GitHub Actions testing)
+.secrets
