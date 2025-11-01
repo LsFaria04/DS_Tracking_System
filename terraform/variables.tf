@@ -79,5 +79,5 @@ variable "blockchain_private_key" {
 variable "blockchain_contract_address" {
   description = "Deployed smart contract address on Sepolia testnet (leave empty if not yet deployed)"
   type        = string
-  default     = "0x472b477d30c45cfbd89e76d9f9700ad1f90cc370"
+  default     = "0xCB0B5282057FCf183dE89CF3115a01a02e82eB61"
 }

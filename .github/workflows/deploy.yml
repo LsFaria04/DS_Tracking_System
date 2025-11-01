@@ -149,13 +149,21 @@ jobs:
         # Set password as environment variable (using single quotes to avoid interpretation)
         export PGPASSWORD='${{ secrets.DB_PASSWORD }}'
         
-        # Run migrations using public IP
-        psql -h $DB_IP -U tracking_user -d tracking_db -f db/migrations/001_init_schema.sql
+        # Check if database is already initialized
+        TABLE_COUNT=$(psql -h $DB_IP -U tracking_user -d tracking_db -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_name='orders';")
         
-        # Run seed data
-        psql -h $DB_IP -U tracking_user -d tracking_db -f db/seeds/dev_data.sql
-        
-        echo "Database migrations completed successfully!"
+        if [ "$TABLE_COUNT" = "1" ]; then
+          echo "Database already initialized, skipping migrations."
+        else
+          echo "Running database migrations..."
+          # Run migrations using public IP
+          psql -h $DB_IP -U tracking_user -d tracking_db -f db/migrations/001_init_schema.sql
+          
+          # Run seed data
+          psql -h $DB_IP -U tracking_user -d tracking_db -f db/seeds/dev_data.sql
+          
+          echo "Database migrations completed successfully!"
+        fi
 
     - name: Fix IAM bindings
       run: |

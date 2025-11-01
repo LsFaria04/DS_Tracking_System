@@ -29,7 +29,7 @@ Write-Host "Applying Terraform changes..." -ForegroundColor Yellow
 terraform apply -auto-approve `
   -var="docker_image=returnedft/tracking-status:$TAG" `
   -var="frontend_docker_image=returnedft/tracking-status-frontend:$TAG" `
-  -var="blockchain_contract_address=0x63879e72DDC4b97a1A092648d99d69A9ad5F3AC8"
+  -var="blockchain_contract_address=0xCB0B5282057FCf183dE89CF3115a01a02e82eB61"
 
 # Fix IAM
 Write-Host "Fixing IAM..." -ForegroundColor Yellow
