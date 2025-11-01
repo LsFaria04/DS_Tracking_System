@@ -146,19 +146,14 @@ jobs:
         # Install PostgreSQL client
         sudo apt-get update && sudo apt-get install -y postgresql-client
         
+        # Set password as environment variable
+        export PGPASSWORD="${{ secrets.DB_PASSWORD }}"
+        
         # Run migrations using public IP
-        PGPASSWORD="${{ secrets.DB_PASSWORD }}" psql \
-          -h $DB_IP \
-          -U tracking_user \
-          -d tracking_db \
-          -f db/migrations/001_init_schema.sql
+        psql -h $DB_IP -U tracking_user -d tracking_db -f db/migrations/001_init_schema.sql
         
         # Run seed data
-        PGPASSWORD="${{ secrets.DB_PASSWORD }}" psql \
-          -h $DB_IP \
-          -U tracking_user \
-          -d tracking_db \
-          -f db/seeds/dev_data.sql
+        psql -h $DB_IP -U tracking_user -d tracking_db -f db/seeds/dev_data.sql
         
         echo "Database migrations completed successfully!"
 
