@@ -31,6 +31,7 @@ terraform apply -auto-approve `
   -var="frontend_docker_image=returnedft/tracking-status-frontend:$TAG" `
   -var="blockchain_contract_address=0xCB0B5282057FCf183dE89CF3115a01a02e82eB61"
 
+
 # Fix IAM
 Write-Host "Fixing IAM..." -ForegroundColor Yellow
 gcloud run services add-iam-policy-binding tracking-status-frontend `
