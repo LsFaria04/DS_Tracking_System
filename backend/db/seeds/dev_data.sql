@@ -48,47 +48,7 @@ VALUES
   -- Order 6: Seller near Évora (Vila Viçosa) -> Regional Center Évora -> Delivery in Viseu (Centro)
   (106, 504, 'Dona Beatriz, Largo do Conde 8, 7160-251 Vila Viçosa, Portugal', 38.7830, -7.4160, 'TRACK006', CURRENT_DATE + INTERVAL '8 days', 'Rua Formosa 120, 3500-161 Viseu, Portugal', 40.6566, -7.9122);
 
--- Insert status history for each order
-INSERT INTO order_status_history (order_id, order_status, note, order_location, storage_id)
-VALUES
-  -- Order 1: Seller (Lisboa) -> Main Warehouse Lisboa -> Delivery
-  (1, 'PROCESSING', 'Order received from seller', 'Dona Lurdes', NULL),
-  (1, 'SHIPPED', 'Picked up from seller, arrived at warehouse', 'Main Warehouse Lisboa', 1),
-  (1, 'IN TRANSIT', 'Package ready for delivery', 'Main Warehouse Lisboa', 1),
-  
-  -- Order 2: Seller (Porto) -> Distribution Center Porto -> Coimbra Hub
-  (2, 'PROCESSING', 'Order received from seller', 'Dona Maria', NULL),
-  (2, 'SHIPPED', 'Picked up from seller', 'Distribution Center Porto', 2),
-  (2, 'IN TRANSIT', 'In transit via Coimbra', 'Regional Hub Coimbra', 3),
-  
-  -- Order 3: Seller (Faro) -> Logistics Center Faro (Cancelled)
-  (3, 'PROCESSING', 'Order received from seller', 'Dona Alzira', NULL),
-  (3, 'SHIPPED', 'Picked up from seller', 'Logistics Center Faro', 4),
-  (3, 'CANCELLED', 'Customer requested cancellation', 'Logistics Center Faro', 4),
-  
-  -- Order 4: Seller (Lisboa) -> Main Warehouse Lisboa -> Madeira Hub
-  (4, 'PROCESSING', 'Order received from seller', 'Dona Lurdes', NULL),
-  (4, 'SHIPPED', 'Picked up from seller', 'Main Warehouse Lisboa', 1),
-  (4, 'IN TRANSIT', 'Package at warehouse, preparing for air transit', 'Main Warehouse Lisboa', 1),
-  (4, 'IN TRANSIT', 'Arrived at Lisbon Airport', 'Lisbon Airport (Cargo)', 12),
-  (4, 'IN TRANSIT', 'Arrived at Funchal Airport', 'Funchal Airport (Cargo)', 14),
-  (4, 'IN TRANSIT', 'Arrived at Madeira hub', 'Madeira Hub Funchal', 10),
-  (4, 'OUT FOR DELIVERY', 'Out for delivery in Funchal', 'Madeira Hub Funchal', 10),
-  
-  -- Order 5: Seller (Porto) -> Distribution Center Porto -> Açores Hub
-  (5, 'PROCESSING', 'Order received from seller', 'Dona Maria', NULL),
-  (5, 'SHIPPED', 'Picked up from seller', 'Distribution Center Porto', 2),
-  (5, 'IN TRANSIT', 'Package at warehouse, preparing for air transit', 'Distribution Center Porto', 2),
-  (5, 'IN TRANSIT', 'Arrived at Porto Airport', 'Porto Airport (Cargo)', 13),
-  (5, 'IN TRANSIT', 'Arrived at Ponta Delgada Airport', 'Ponta Delgada Airport (Cargo)', 15),
-  (5, 'IN TRANSIT', 'Arrived at Açores hub', 'Açores Hub Ponta Delgada', 11),
-
-  -- Order 6: Seller (Évora) -> Regional Center Évora -> Regional Hub Viseu (Delivered)
-  (6, 'PROCESSING', 'Order received from seller', 'Dona Beatriz', NULL),
-  (6, 'SHIPPED', 'Picked up from seller', 'Regional Center Évora', 6),
-  (6, 'IN TRANSIT', 'In transit to Viseu', 'Regional Center Évora', 6),
-  (6, 'OUT FOR DELIVERY', 'Out for delivery in Viseu', 'Regional Hub Viseu', 9),
-  (6, 'DELIVERED', 'Delivered to customer in Viseu', 'Regional Hub Viseu', 9);
+-- Note: order_status_history will be populated via API calls to record blockchain hashes
 
 -- Insert products for each order
 INSERT INTO order_products (order_id, product_id, quantity)

@@ -116,6 +116,7 @@ jobs:
         TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
         TF_VAR_blockchain_rpc_url: ${{ secrets.BLOCKCHAIN_RPC_URL }}
         TF_VAR_blockchain_private_key: ${{ secrets.BLOCKCHAIN_PRIVATE_KEY }}
+        TF_VAR_blockchain_contract_address: ${{ secrets.BLOCKCHAIN_CONTRACT_ADDRESS }}
       run: |
         terraform init
         
@@ -127,6 +128,33 @@ jobs:
         terraform import -input=false google_cloud_run_v2_service.frontend projects/madeinportugal/locations/europe-west1/services/tracking-status-frontend || true
         
         terraform apply -auto-approve
+
+    - name: Run database migrations
+      working-directory: backend
+      run: |
+        echo "Running database migrations on Cloud SQL..."
+        
+        # Get Cloud SQL instance public IP
+        DB_IP=$(gcloud sql instances describe tracking-db --project=madeinportugal --format='value(ipAddresses[0].ipAddress)')
+        
+        # Install PostgreSQL client
+        sudo apt-get update && sudo apt-get install -y postgresql-client
+        
+        # Run migrations using public IP
+        PGPASSWORD="${{ secrets.DB_PASSWORD }}" psql \
+          -h $DB_IP \
+          -U tracking_user \
+          -d tracking_db \
+          -f db/migrations/001_init_schema.sql
+        
+        # Run seed data
+        PGPASSWORD="${{ secrets.DB_PASSWORD }}" psql \
+          -h $DB_IP \
+          -U tracking_user \
+          -d tracking_db \
+          -f db/seeds/dev_data.sql
+        
+        echo "Database migrations completed successfully!"
 
     - name: Fix IAM bindings
       run: |

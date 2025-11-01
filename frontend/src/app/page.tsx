@@ -7,13 +7,9 @@ export default function Home() {
   const [backendStatus, setBackendStatus] = useState<string>("Checking...");
 
   useEffect(() => {
-    // First get the API URL from server config
-    fetch('/api/config')
-      .then((res) => res.json())
-      .then((config) => {
-        // Then fetch from the backend
-        return fetch(config.apiUrl);
-      })
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    
+    fetch(apiUrl)
       .then((res) => res.json())
       .then((data) => setBackendStatus(data.message))
       .catch(() => setBackendStatus("Backend unreachable"));

@@ -1,19 +1,35 @@
+# Generate unique tag based on timestamp
+$TAG = Get-Date -Format "yyyyMMdd-HHmmss"
+
 # Backend
 Write-Host "Building backend..." -ForegroundColor Yellow
 Set-Location backend
-docker build -t returnedft/tracking-status:test .
-docker push returnedft/tracking-status:test
+docker build -t returnedft/tracking-status:$TAG .
+docker push returnedft/tracking-status:$TAG
 
 # Frontend  
 Write-Host "Building frontend..." -ForegroundColor Yellow
 Set-Location ..\frontend
-docker build -t returnedft/tracking-status-frontend:testfrontend .
-docker push returnedft/tracking-status-frontend:testfrontend
+docker build --build-arg NEXT_PUBLIC_API_URL=https://tracking-status-edneicy3ca-ew.a.run.app -t returnedft/tracking-status-frontend:$TAG .
+docker push returnedft/tracking-status-frontend:$TAG
 
 # Terraform
-Write-Host "Running terraform..." -ForegroundColor Yellow
+Write-Host "Running terraform with new images..." -ForegroundColor Yellow
 Set-Location ..\terraform
-terraform apply
+
+# Import existing resources if they exist
+Write-Host "Importing existing resources..." -ForegroundColor Cyan
+terraform import -input=false google_sql_database_instance.postgres madeinportugal/tracking-db 2>$null
+terraform import -input=false google_sql_database.database madeinportugal/tracking-db/tracking_db 2>$null
+terraform import -input=false google_sql_user.user madeinportugal/tracking-db/tracking_user 2>$null
+terraform import -input=false google_cloud_run_v2_service.default projects/madeinportugal/locations/europe-west1/services/tracking-status 2>$null
+terraform import -input=false google_cloud_run_v2_service.frontend projects/madeinportugal/locations/europe-west1/services/tracking-status-frontend 2>$null
+
+Write-Host "Applying Terraform changes..." -ForegroundColor Yellow
+terraform apply -auto-approve `
+  -var="docker_image=returnedft/tracking-status:$TAG" `
+  -var="frontend_docker_image=returnedft/tracking-status-frontend:$TAG" `
+  -var="blockchain_contract_address=0x63879e72DDC4b97a1A092648d99d69A9ad5F3AC8"
 
 # Fix IAM
 Write-Host "Fixing IAM..." -ForegroundColor Yellow

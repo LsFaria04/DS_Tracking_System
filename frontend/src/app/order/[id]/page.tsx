@@ -27,7 +27,11 @@ export default function OrderPage() {
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/${id}`)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    console.log('API URL:', apiUrl); // Debug log
+    console.log('Full fetch URL:', `${apiUrl}/order/${id}`); // Debug full URL
+    
+    fetch(`${apiUrl}/order/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch order');
         return res.json();
@@ -59,7 +63,7 @@ export default function OrderPage() {
       })
       .finally(() => setLoading(false));
       
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/history/${id}`)
+      fetch(`${apiUrl}/order/history/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch order history');
         return res.json();

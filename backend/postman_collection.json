@@ -28,6 +28,443 @@
           "path": ["pong"]
         }
       }
+    },
+    {
+      "name": "Blockchain Sync",
+      "item": [
+        {
+          "name": "Order 1 - Status 1 - PROCESSING",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 1, \"order_status\": \"PROCESSING\", \"note\": \"Order received from seller\", \"order_location\": \"Dona Lurdes\", \"storage_id\": null}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 1 - Status 2 - SHIPPED",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 1, \"order_status\": \"SHIPPED\", \"note\": \"Picked up from seller, arrived at warehouse\", \"order_location\": \"Main Warehouse Lisboa\", \"storage_id\": 1}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 1 - Status 3 - IN TRANSIT",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 1, \"order_status\": \"IN TRANSIT\", \"note\": \"Package ready for delivery\", \"order_location\": \"Main Warehouse Lisboa\", \"storage_id\": 1}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 2 - Status 1 - PROCESSING",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 2, \"order_status\": \"PROCESSING\", \"note\": \"Order received from seller\", \"order_location\": \"Dona Maria\", \"storage_id\": null}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 2 - Status 2 - SHIPPED",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 2, \"order_status\": \"SHIPPED\", \"note\": \"Picked up from seller\", \"order_location\": \"Distribution Center Porto\", \"storage_id\": 2}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 2 - Status 3 - IN TRANSIT",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 2, \"order_status\": \"IN TRANSIT\", \"note\": \"In transit via Coimbra\", \"order_location\": \"Regional Hub Coimbra\", \"storage_id\": 3}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 3 - Status 1 - PROCESSING",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 3, \"order_status\": \"PROCESSING\", \"note\": \"Order received from seller\", \"order_location\": \"Dona Alzira\", \"storage_id\": null}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 3 - Status 2 - SHIPPED",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 3, \"order_status\": \"SHIPPED\", \"note\": \"Picked up from seller\", \"order_location\": \"Logistics Center Faro\", \"storage_id\": 4}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 3 - Status 3 - CANCELLED",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 3, \"order_status\": \"CANCELLED\", \"note\": \"Customer requested cancellation\", \"order_location\": \"Logistics Center Faro\", \"storage_id\": 4}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 4 - Status 1 - PROCESSING",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 4, \"order_status\": \"PROCESSING\", \"note\": \"Order received from seller\", \"order_location\": \"Dona Lurdes\", \"storage_id\": null}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 4 - Status 2 - SHIPPED",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 4, \"order_status\": \"SHIPPED\", \"note\": \"Picked up from seller\", \"order_location\": \"Main Warehouse Lisboa\", \"storage_id\": 1}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 4 - Status 3 - IN TRANSIT (Warehouse)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 4, \"order_status\": \"IN TRANSIT\", \"note\": \"Package at warehouse, preparing for air transit\", \"order_location\": \"Main Warehouse Lisboa\", \"storage_id\": 1}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 4 - Status 4 - IN TRANSIT (Lisbon Airport)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 4, \"order_status\": \"IN TRANSIT\", \"note\": \"Arrived at Lisbon Airport\", \"order_location\": \"Lisbon Airport (Cargo)\", \"storage_id\": 12}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 4 - Status 5 - IN TRANSIT (Funchal Airport)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 4, \"order_status\": \"IN TRANSIT\", \"note\": \"Arrived at Funchal Airport\", \"order_location\": \"Funchal Airport (Cargo)\", \"storage_id\": 14}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 4 - Status 6 - IN TRANSIT (Madeira Hub)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 4, \"order_status\": \"IN TRANSIT\", \"note\": \"Arrived at Madeira hub\", \"order_location\": \"Madeira Hub Funchal\", \"storage_id\": 10}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 4 - Status 7 - OUT FOR DELIVERY",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 4, \"order_status\": \"OUT FOR DELIVERY\", \"note\": \"Out for delivery in Funchal\", \"order_location\": \"Madeira Hub Funchal\", \"storage_id\": 10}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 5 - Status 1 - PROCESSING",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 5, \"order_status\": \"PROCESSING\", \"note\": \"Order received from seller\", \"order_location\": \"Dona Maria\", \"storage_id\": null}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 5 - Status 2 - SHIPPED",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 5, \"order_status\": \"SHIPPED\", \"note\": \"Picked up from seller\", \"order_location\": \"Distribution Center Porto\", \"storage_id\": 2}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 5 - Status 3 - IN TRANSIT (Warehouse)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 5, \"order_status\": \"IN TRANSIT\", \"note\": \"Package at warehouse, preparing for air transit\", \"order_location\": \"Distribution Center Porto\", \"storage_id\": 2}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 5 - Status 4 - IN TRANSIT (Porto Airport)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 5, \"order_status\": \"IN TRANSIT\", \"note\": \"Arrived at Porto Airport\", \"order_location\": \"Porto Airport (Cargo)\", \"storage_id\": 13}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 5 - Status 5 - IN TRANSIT (Ponta Delgada Airport)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 5, \"order_status\": \"IN TRANSIT\", \"note\": \"Arrived at Ponta Delgada Airport\", \"order_location\": \"Ponta Delgada Airport (Cargo)\", \"storage_id\": 15}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 5 - Status 6 - IN TRANSIT (Açores Hub)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 5, \"order_status\": \"IN TRANSIT\", \"note\": \"Arrived at Açores hub\", \"order_location\": \"Açores Hub Ponta Delgada\", \"storage_id\": 11}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 6 - Status 1 - PROCESSING",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 6, \"order_status\": \"PROCESSING\", \"note\": \"Order received from seller\", \"order_location\": \"Dona Beatriz\", \"storage_id\": null}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 6 - Status 2 - SHIPPED",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 6, \"order_status\": \"SHIPPED\", \"note\": \"Picked up from seller\", \"order_location\": \"Regional Center Évora\", \"storage_id\": 6}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 6 - Status 3 - IN TRANSIT",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 6, \"order_status\": \"IN TRANSIT\", \"note\": \"In transit to Viseu\", \"order_location\": \"Regional Center Évora\", \"storage_id\": 6}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 6 - Status 4 - OUT FOR DELIVERY",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 6, \"order_status\": \"OUT FOR DELIVERY\", \"note\": \"Out for delivery in Viseu\", \"order_location\": \"Regional Hub Viseu\", \"storage_id\": 9}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        },
+        {
+          "name": "Order 6 - Status 5 - DELIVERED",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\": 6, \"order_status\": \"DELIVERED\", \"note\": \"Delivered to customer in Viseu\", \"order_location\": \"Regional Hub Viseu\", \"storage_id\": 9}"
+            },
+            "url": {
+              "raw": "{{base_url}}/order/history/add",
+              "host": ["{{base_url}}"],
+              "path": ["order", "history", "add"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
