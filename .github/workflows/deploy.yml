@@ -86,17 +86,23 @@ jobs:
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker --quiet
 
+    - name: Generate timestamp tag
+      id: tag
+      run: echo "TAG=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
     - name: Build and push backend image
       working-directory: backend
       run: |
-        docker build -f Dockerfile -t returnedft/tracking-status:test .
-        docker push returnedft/tracking-status:test
+        docker build -f Dockerfile -t returnedft/tracking-status:${{ steps.tag.outputs.TAG }} .
+        docker push returnedft/tracking-status:${{ steps.tag.outputs.TAG }}
 
     - name: Build and push frontend image
       working-directory: frontend
+      env:
+        NEXT_PUBLIC_API_URL: https://tracking-status-edneicy3ca-ew.a.run.app
       run: |
-        docker build -f Dockerfile -t returnedft/tracking-status-frontend:testfrontend .
-        docker push returnedft/tracking-status-frontend:testfrontend
+        docker build -f Dockerfile --build-arg NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
+        docker push returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }}
 
     - name: Setup Terraform
       run: |
@@ -111,8 +117,8 @@ jobs:
       working-directory: terraform
       env:
         TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-        TF_VAR_docker_image: returnedft/tracking-status:test
-        TF_VAR_frontend_docker_image: returnedft/tracking-status-frontend:testfrontend
+        TF_VAR_docker_image: returnedft/tracking-status:${{ steps.tag.outputs.TAG }}
+        TF_VAR_frontend_docker_image: returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }}
         TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
         TF_VAR_blockchain_rpc_url: ${{ secrets.BLOCKCHAIN_RPC_URL }}
         TF_VAR_blockchain_private_key: ${{ secrets.BLOCKCHAIN_PRIVATE_KEY }}
