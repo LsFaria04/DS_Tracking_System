@@ -3,12 +3,14 @@ package main
 import (
 	"app/blockchain"
 	"app/routes"
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 	"time"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -69,12 +71,84 @@ func configRouter(db *gorm.DB) (*gin.Engine, error){
   return router, nil
 }
 
+// Test PubSub emulator connection
+func testPubSub() error {
+  
+  pubsubEmulatorHost := os.Getenv("PUBSUB_EMULATOR_HOST")
+  if pubsubEmulatorHost == "" {
+    log.Println("PUBSUB_EMULATOR_HOST not set, skipping PubSub test")
+    return nil
+  }
+
+  log.Printf("Testing PubSub emulator at: %s", pubsubEmulatorHost)
+  
+  ctx := context.Background()
+  
+  // Use the project ID from environment or default to "madeinportugal"
+  projectID := os.Getenv("PUBSUB_PROJECT")
+  if projectID == "" {
+    projectID = "madeinportugal"
+  }
+  
+  // Create PubSub client
+  client, err := pubsub.NewClient(ctx, projectID)
+  if err != nil {
+    return fmt.Errorf("failed to create pubsub client: %v", err)
+  }
+  defer client.Close()
+  
+  // Test publishing to "orders" topic
+  topic := client.Topic("orders")
+  defer topic.Stop()
+  
+  // Check if topic exists, if not create it
+  exists, err := topic.Exists(ctx)
+  if err != nil {
+    return fmt.Errorf("failed to check if topic exists: %v", err)
+  }
+  
+  if !exists {
+    log.Println("Topic 'orders' does not exist, creating...")
+    topic, err = client.CreateTopic(ctx, "orders")
+    if err != nil {
+      return fmt.Errorf("failed to create topic: %v", err)
+    }
+  }
+  
+  // Publish a test message
+  testMessage := fmt.Sprintf("Test message from backend - %s", time.Now().Format(time.RFC3339))
+  result := topic.Publish(ctx, &pubsub.Message{
+    Data: []byte(testMessage),
+    Attributes: map[string]string{
+      "source": "tracking-status",
+      "type":   "health-check",
+    },
+  })
+  
+  // Block until the message is published
+  msgID, err := result.Get(ctx)
+  if err != nil {
+    return fmt.Errorf("failed to publish message: %v", err)
+  }
+  
+  log.Printf("PubSub test successful! Message ID: %s", msgID)
+  log.Printf("Published message: %s", testMessage)
+  
+  return nil
+}
+
 func main() {
   db, err := configDB()
 
   if err != nil {
     log.Printf("Error while conecting to the database: %v", err)
     return
+  }
+
+  // Test PubSub emulator if in development mode
+  if err := testPubSub(); err != nil {
+    log.Printf("⚠️  PubSub test failed: %v", err)
+    log.Println("Continuing without PubSub...")
   }
 
   router,err := configRouter(db)

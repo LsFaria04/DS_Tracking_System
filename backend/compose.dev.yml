@@ -1,4 +1,21 @@
 services:
+  pubsub-emulator:
+      image: dipjyotimetia/pubsub-emulator:latest
+      container_name: pubsub-emulator
+      environment:
+        - PUBSUB_PROJECT=madeinportugal
+        - PUBSUB_TOPIC=orders,payments,notifications
+        - PUBSUB_SUBSCRIPTION=orders-sub,payments-sub,notifications-sub
+        - PUBSUB_PORT=8085
+        - DASHBOARD_PORT=8084
+      ports:
+        - "8085:8085"  # Pub/Sub emulator
+        - "8084:8084"  # Web dashboard
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8084/api/health"]
+        interval: 10s
+        timeout: 5s
+        retries: 3
 
   postgres:
     image: postgres:17
@@ -42,6 +59,9 @@ services:
       BLOCKCHAIN_PRIVATE_KEY: 304744fdba3e9f3ac2ea259e87d5ad34325b0c04d8e57df1004ec99f41741cc4
       BLOCKCHAIN_CONTRACT_ADDRESS: "0xCB0B5282057FCf183dE89CF3115a01a02e82eB61"
       BLOCKCHAIN_NETWORK: sepolia
+      # PubSub Emulator Configuration
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PUBSUB_PROJECT: madeinportugal
     develop:
       watch:
         - action: sync
@@ -53,6 +73,7 @@ services:
           path: ./src/go.sum
     depends_on: 
       - postgres
+      - pubsub-emulator
 
 volumes:
   postgres_data:
