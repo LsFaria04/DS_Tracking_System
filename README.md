@@ -33,7 +33,7 @@ docker compose -f compose.dev.yml build --no-cache
 docker compose -f compose.dev.yml up --watch
 ```
 
-To run the production Compose and Dockerfile (i.e., the ones without the .dev suffix), make sure to create a .env file containing the required environment variables. Place this file in the same directory as your Compose configuration to ensure proper loading.
+To run the Compose and Dockerfile files, make sure to create a .env file containing the required environment variables. Place this file in the same directory as your Compose configuration to ensure proper loading.
 
 **DO NOT COMMIT THE .ENV FILE!**
 
