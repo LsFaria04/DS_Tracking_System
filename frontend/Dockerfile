@@ -1,33 +1,29 @@
-# Stage 1: Builder
-FROM node:20-alpine AS builder
+#### STAGE 1: Build the React App ####
+
+FROM node:20-alpine AS build
 WORKDIR /app
 
-# Accept build argument for API URL
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
-# Stage 2: Runner
-FROM node:20-alpine AS runner
-WORKDIR /app
+#### STAGE 2: Serve the App with Nginx ####
 
-ENV NODE_ENV production
+# Use a tiny, secure Nginx image
+FROM nginx:stable-alpine
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Copy the static files from the build stage
+COPY --from=build /app/dist /usr/share/nginx/html
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copy the custom Nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-USER nextjs
+# Expose port 80 (Nginx's default)
+EXPOSE 80
 
-EXPOSE 3000
-
-ENV PORT 3000
-
-CMD ["node", "server.js"]
+# Run Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]
