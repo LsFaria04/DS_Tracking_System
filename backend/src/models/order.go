@@ -17,6 +17,6 @@ type Orders struct{
     Delivery_Longitude  float64  `gorm:"type:decimal(11,8)"`
     Price               float64   `gorm:"not null;default:0"`
 
-    Products []OrderProduct        `gorm:"foreignKey:OrderID"`
+    Products []OrderProduct        `gorm:"foreignKey:Order_ID"`
     Updates  []OrderStatusHistory  `gorm:"foreignKey:Order_ID"`
 }

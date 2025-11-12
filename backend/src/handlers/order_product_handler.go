@@ -69,7 +69,7 @@ func (h *OrderProductHandler) AddOrderProduct(c *gin.Context) {
 
 	// Check if order exists
 	var order models.Orders
-	if err := h.DB.First(&order, orderProduct.OrderID).Error; err != nil {
+	if err := h.DB.First(&order, orderProduct.Order_ID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		} else {

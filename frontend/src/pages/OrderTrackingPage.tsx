@@ -23,6 +23,7 @@ export default function OrderPage() {
             })
             .then(data => {
                 const o = data.order as BackendOrder;
+                console.log(o)
                 setOrder({
                     tracking_code: o.Tracking_Code,
                     delivery_estimate: o.Delivery_Estimate,
@@ -35,9 +36,9 @@ export default function OrderPage() {
                     created_at: o.Created_At,
                     price: o.Price.toString(),
                     products: o.Products?.map((p: BackendOrderProduct) => ({
-                        product_id: p.ProductID,
-                        name: p.Product ? p.Product.Name : "Unknown",
-                        price: p.Product ? p.Product.Price : 0,
+                        product_id: p.Product_ID,
+                        name: p.Product_Name_At_Purchase,
+                        price: p.Product_Price_At_Purchase,
                         quantity: p.Quantity
                     })) || [],
                     statusHistory: []
@@ -84,9 +85,9 @@ export default function OrderPage() {
                             created_at: element.Order.Created_At,
                             price: element.Order.Price.toString(),
                             products: element.Order.Products?.map((p: BackendOrderProduct) => ({
-                                product_id: p.ProductID,
-                                name: p.Product ? p.Product.Name : "Unknown",
-                                price: p.Product ? p.Product.Price : 0,
+                                product_id: p.Product_ID,
+                                name: p.Product_Name_At_Purchase,
+                                price: p.Product_Price_At_Purchase,
                                 quantity: p.Quantity
                             })) || [],
                             statusHistory: []

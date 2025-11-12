@@ -90,21 +90,21 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
 	//create the order products associated to the order
 	for _, productRequest := range input.Products{
 		var orderProduct models.OrderProduct
-		orderProduct.OrderID = order.Id
-		orderProduct.ProductID = productRequest.ProductID
+		orderProduct.Order_ID = order.Id
+		orderProduct.Product_ID = productRequest.ProductID
 		orderProduct.Quantity = productRequest.Quantity
 
 		//get the information about the products from the Jumpseller API
 		var product *models.Product
-		product, err := GetProductByIDAPI(strconv.FormatUint(uint64(orderProduct.ProductID), 10))
+		product, err := GetProductByIDAPI(strconv.FormatUint(uint64(orderProduct.Product_ID), 10))
 		if err != nil{
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while processing the products"})
 				transaction.Rollback()
 				return
 		}
 		
-		orderProduct.ProductNameAtPurchase = product.Name
-		orderProduct.ProductPriceAtPurchase = product.Price
+		orderProduct.Product_Name_At_Purchase = product.Name
+		orderProduct.Product_Price_At_Purchase = product.Price
 
 		result := transaction.Create(&orderProduct)
 		if result.Error != nil {

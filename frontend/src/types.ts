@@ -41,16 +41,12 @@ interface OrderData {
 }
 
 // Backend API response types
-interface BackendProduct {
-    ID: number;
-    Name: string;
-    Price: number;
-}
 
 interface BackendOrderProduct {
-    ProductID: number;
+    Product_ID: number;
     Quantity: number;
-    Product?: BackendProduct;
+    Product_Name_At_Purchase: string;
+    Product_Price_At_Purchase: number;
 }
 
 interface BackendStorage {
@@ -97,4 +93,4 @@ interface VerificationResult {
     mismatches?: string[];
 }
 
-export type {OrderData, OrderProduct, OrderStatus, Storage, VerificationResult, BackendOrderStatus, BackendOrder, BackendStorage, BackendOrderProduct, BackendProduct}
+export type {OrderData, OrderProduct, OrderStatus, Storage, VerificationResult, BackendOrderStatus, BackendOrder, BackendStorage, BackendOrderProduct}
