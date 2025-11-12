@@ -1,7 +1,6 @@
 --Remove any content that already exists in the db
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS order_status_history CASCADE;
-DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS order_products CASCADE;
 DROP TABLE IF EXISTS storages CASCADE;
 DROP TYPE IF EXISTS order_state CASCADE;
@@ -47,18 +46,13 @@ CREATE TABLE order_status_history (
     storage_id INTEGER REFERENCES storages(id) ON DELETE SET NULL
 );
 
--- Products table: contains available products for order
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    price DECIMAL(10,2) NOT NULL CHECK(price > 0)
-);
-
 -- Contains the products that are part of the order
 CREATE TABLE order_products (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL,
+    product_name_at_purchase VARCHAR(255) NOT NULL,
+    product_price_at_purchase DECIMAL(10,2) NOT NULL CHECK(product_price_at_purchase > 0),
     quantity INTEGER NOT NULL CHECK(quantity > 0)
 );
 
@@ -86,9 +80,8 @@ RETURNS TRIGGER AS $$
 BEGIN
     UPDATE orders
     SET price = (
-        SELECT COALESCE(SUM(p.price * op.quantity),0)
+        SELECT COALESCE(SUM(op.product_price_at_purchase * op.quantity),0)
         FROM order_products op
-        JOIN products p ON op.product_id = p.id
         WHERE op.order_id = NEW.order_id
     )
     WHERE id = NEW.order_id;

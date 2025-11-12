@@ -18,15 +18,6 @@ INSERT INTO storages (name, address, latitude, longitude) VALUES
 ('Faro Airport (Cargo)', 'Aeroporto Gago Coutinho, 8006-901 Faro, Portugal', 37.0142, -7.9659),
 ('Beja Airport (Cargo)', 'Aeroporto de Beja, EM528-2, 7800-745 Beja, Portugal', 38.0775, -7.9317);
 
--- Insert sample products
-INSERT INTO products (id, name, price)
-VALUES
-  (201, 'Handcrafted Cork Wallet', 24.99),
-  (202, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
-  (203, 'Artisan Olive Wood Cutting Board', 38.75),
-  (204, 'Hand-painted Azulejo Coaster Set', 19.99),
-  (205, 'Traditional Filigree Silver Earrings', 67.00);
-
 -- Insert sample orders
 INSERT INTO orders (customer_id, seller_id, seller_address, seller_latitude, seller_longitude, tracking_code, delivery_estimate, delivery_address, delivery_latitude, delivery_longitude)
 VALUES
@@ -51,16 +42,16 @@ VALUES
 -- Note: order_status_history will be populated via API calls to record blockchain hashes
 
 -- Insert products for each order
-INSERT INTO order_products (order_id, product_id, quantity)
+INSERT INTO order_products (order_id, product_id, quantity, product_name_at_purchase, product_price_at_purchase)
 VALUES
-  (1, 201, 2),
-  (1, 202, 1),
-  (2, 203, 3),
-  (3, 204, 1),
-  (3, 205, 2),
-  (4, 201, 1),
-  (4, 205, 3),
-  (5, 202, 1),
-  (5, 204, 2),
-  (6, 201, 1),
-  (6, 203, 2);
+  (1, 32586490, 2, 'Handcrafted Cork Wallet',  24.99),
+  (1, 32586503, 1, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
+  (2, 32586505, 3, 'Artisan Olive Wood Cutting Board', 38.75),
+  (3, 32586512, 1, 'Hand-painted Azulejo Coaster Set', 19.99),
+  (3, 32586516, 2, 'Traditional Filigree Silver Earrings', 67.00),
+  (4, 32586490, 1,  'Handcrafted Cork Wallet',  24.99),
+  (4, 32586516, 3, 'Traditional Filigree Silver Earrings', 67.00),
+  (5, 32586503, 1, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
+  (5, 32586512, 2, 'Hand-painted Azulejo Coaster Set', 19.99),
+  (6, 32586490, 1, 'Handcrafted Cork Wallet',  24.99),
+  (6, 32586505, 2, 'Artisan Olive Wood Cutting Board', 38.75);

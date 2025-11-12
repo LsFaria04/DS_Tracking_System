@@ -38,7 +38,7 @@ func (h *OrderProductHandler) GetOrderProductByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var orderProduct models.OrderProduct
-	result := h.DB.Preload("Product").First(&orderProduct, id)
+	result := h.DB.First(&orderProduct, id)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -78,17 +78,6 @@ func (h *OrderProductHandler) AddOrderProduct(c *gin.Context) {
 		return
 	}
 
-	// Verify product exists
-	var product models.Product
-	if err := h.DB.First(&product, orderProduct.ProductID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		}
-		return
-	}
-
 	// Create the order product
 	result := h.DB.Create(&orderProduct)
 	if result.Error != nil {
@@ -97,7 +86,7 @@ func (h *OrderProductHandler) AddOrderProduct(c *gin.Context) {
 	}
 
 	// Load the product relation for the response
-	h.DB.Preload("Product").First(&orderProduct, orderProduct.ID)
+	h.DB.First(&orderProduct, orderProduct.ID)
 
 	c.JSON(http.StatusCreated, gin.H{"order_product": orderProduct})
 }

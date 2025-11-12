@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func (h *OrderHandler) GetOrderByID(c *gin.Context){
 	id := c.Param("id")
 
 	var order models.Orders
-	result := h.DB.Preload("Products.Product").First(&order, id)
+	result := h.DB.Preload("Products").First(&order, id)
 
 	//check if there was an error with the database request
     if result.Error != nil {
@@ -85,12 +86,25 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
         }
 	}
 
+
 	//create the order products associated to the order
 	for _, productRequest := range input.Products{
 		var orderProduct models.OrderProduct
 		orderProduct.OrderID = order.Id
 		orderProduct.ProductID = productRequest.ProductID
 		orderProduct.Quantity = productRequest.Quantity
+
+		//get the information about the products from the Jumpseller API
+		var product *models.Product
+		product, err := GetProductByIDAPI(strconv.FormatUint(uint64(orderProduct.ProductID), 10))
+		if err != nil{
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while processing the products"})
+				transaction.Rollback()
+				return
+		}
+		
+		orderProduct.ProductNameAtPurchase = product.Name
+		orderProduct.ProductPriceAtPurchase = product.Price
 
 		result := transaction.Create(&orderProduct)
 		if result.Error != nil {
@@ -106,6 +120,8 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
 		}
 
 	}
+
+	
 
 	//insert a first update (processing)
 	var statusHistory models.OrderStatusHistory
