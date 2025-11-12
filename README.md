@@ -1,6 +1,6 @@
 # Order Tracking System
 
-Backend developed with Go, frontend with Next.js, deployed on Google Cloud Platform.
+Backend developed with Go, frontend with React (v18.3.1), deployed on Google Cloud Platform.
 
 ## Quick Start
 
@@ -57,7 +57,7 @@ npm run dev
 
 ### Accessing Services
 
-- **Frontend**: http://localhost:3000
+- **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:8080 (must be running for API calls)
 
 To stop the frontend containers:
