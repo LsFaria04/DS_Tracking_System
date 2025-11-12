@@ -1,4 +1,4 @@
-package models
+package requestModels
 
 type BlockchainStatusResponse struct {
 	Connected       bool   `json:"connected"`

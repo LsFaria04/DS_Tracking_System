@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"app/blockchain"
-	"app/models"
+	"app/requestModels"
 	"math/big"
 	"net/http"
 
@@ -16,7 +16,7 @@ type BlockchainHandler struct{}
 func (h *BlockchainHandler) GetBlockchainStatus(c *gin.Context) {
 	client, err := blockchain.NewClient()
 	if err != nil {
-		c.JSON(http.StatusOK, models.BlockchainStatusResponse{
+		c.JSON(http.StatusOK, requestModels.BlockchainStatusResponse{
 			Connected: false,
 			Network:   "sepolia",
 			Error:     err.Error(),
@@ -25,7 +25,7 @@ func (h *BlockchainHandler) GetBlockchainStatus(c *gin.Context) {
 	}
 	defer client.Close()
 
-	response := models.BlockchainStatusResponse{
+	response := requestModels.BlockchainStatusResponse{
 		Connected:     true,
 		Network:       "sepolia",
 		WalletAddress: client.WalletAddress.Hex(),

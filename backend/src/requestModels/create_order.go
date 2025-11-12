@@ -7,7 +7,7 @@ type OrderProductRequest struct {
 
 type AddOrderRequest struct {
 	CustomerId          uint                  `json:"customer_id"`
-	SellerId      		uint                `json:"seller_id"`
+	SellerId      		uint                	`json:"seller_id"`
 	SellerAddress		string					`json:"seller_address"` 
 	SellerLatitude		float64					`json:"seller_latitude"`
 	SellerLongitude		float64					`json:"seller_longitude"`

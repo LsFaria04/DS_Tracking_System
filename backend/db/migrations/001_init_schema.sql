@@ -51,7 +51,7 @@ CREATE TABLE order_status_history (
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    price DECIMAL(10,2) NOT NULL
+    price DECIMAL(10,2) NOT NULL CHECK(price > 0)
 );
 
 -- Contains the products that are part of the order
