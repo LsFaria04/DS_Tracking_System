@@ -20,10 +20,16 @@ type VerificationHandler struct {
 	Client *blockchain.Client
 }
 
-
-
 // VerifyOrder verifies all updates for an order against blockchain
 func (h *VerificationHandler) VerifyOrder(c *gin.Context) {
+	if h.Client == nil {
+		c.JSON(http.StatusOK, requestModels.VerificationResponse{
+			Status:   "BLOCKCHAIN_NOT_AVAILABLE",
+			Message:  "Blockchain not configured",
+			Verified: false,
+		})
+		return
+	}
 	orderID := c.Param("order_id")
 
 	// Fetch all order status updates from database

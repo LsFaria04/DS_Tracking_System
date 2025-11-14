@@ -17,40 +17,40 @@ import (
 	"gorm.io/gorm"
 )
 
-type OrderHandler struct{
-	DB *gorm.DB
+type OrderHandler struct {
+	DB     *gorm.DB
 	Client *blockchain.Client
 }
-	
-func (h *OrderHandler) GetOrderByID(c *gin.Context){
+
+func (h *OrderHandler) GetOrderByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var order models.Orders
 	result := h.DB.Preload("Products").First(&order, id)
 
 	//check if there was an error with the database request
-    if result.Error != nil {
-        if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-            c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
-        } else {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-        }
-        
-    } else{
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
+
+	} else {
 		fmt.Printf("Delivery: %s", order.Delivery_Estimate)
-		c.JSON(http.StatusOK,gin.H{"order" : order})
+		c.JSON(http.StatusOK, gin.H{"order": order})
 	}
-	
+
 }
 
-func (h *OrderHandler) AddOrder(c *gin.Context){
+func (h *OrderHandler) AddOrder(c *gin.Context) {
 
 	//get the order request
-    var input requestModels.AddOrderRequest
-    if err := c.ShouldBindJSON(&input); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Input"})
-        return
-    }
+	var input requestModels.AddOrderRequest
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Input"})
+		return
+	}
 
 	//assign a unique tracking code
 	trackingCode := uuid.New().String()
@@ -69,26 +69,24 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
 	order.Seller_Longitude = input.SellerLongitude
 	order.Created_At = time.Now()
 
-	
 	//the next operations are made inside a transaction to ensure atomicity
 	transaction := h.DB.Begin()
 
 	result := transaction.Create(&order)
 	if result.Error != nil {
-        if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-            c.JSON(http.StatusNotFound, gin.H{"error": "Order not Created"})
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Order not Created"})
 			transaction.Rollback()
 			return
-        } else {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			transaction.Rollback()
 			return
-        }
+		}
 	}
 
-
 	//create the order products associated to the order
-	for _, productRequest := range input.Products{
+	for _, productRequest := range input.Products {
 		var orderProduct models.OrderProduct
 		orderProduct.Order_ID = order.Id
 		orderProduct.Product_ID = productRequest.ProductID
@@ -97,12 +95,12 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
 		//get the information about the products from the Jumpseller API
 		var product *models.Product
 		product, err := GetProductByIDAPI(strconv.FormatUint(uint64(orderProduct.Product_ID), 10))
-		if err != nil{
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while processing the products"})
-				transaction.Rollback()
-				return
+			transaction.Rollback()
+			return
 		}
-		
+
 		orderProduct.Product_Name_At_Purchase = product.Name
 		orderProduct.Product_Price_At_Purchase = product.Price
 
@@ -121,55 +119,55 @@ func (h *OrderHandler) AddOrder(c *gin.Context){
 
 	}
 
-	
-
 	//insert a first update (processing)
 	var statusHistory models.OrderStatusHistory
-	
-	//get an instance of the contract
-    auth := h.Client.Auth
-    ethClient := h.Client.EthClient
-    addr := os.Getenv("BLOCKCHAIN_CONTRACT_ADDRESS")
-    contract, err := blockchain.GetContractInstance(ethClient, addr)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-		transaction.Rollback()
-        return
-    }
 
-    statusHistory.Note = "Processing the Order"
+	statusHistory.Note = "Processing the Order"
 	statusHistory.Order_ID = order.Id
 	statusHistory.Order_Location = order.Seller_Address
 	statusHistory.Timestamp_History = time.Now()
 	statusHistory.Order_Status = "PROCESSING"
 
-    //hash the main components of the request
-    data := fmt.Sprintf("%d|%s|%s|%s",
-        statusHistory.Order_ID,
-        statusHistory.Order_Status,
-        statusHistory.Timestamp_History.Format(time.RFC3339),
-        statusHistory.Order_Location,
-    )
+	if h.Client != nil {
+		//get an instance of the contract
+		auth := h.Client.Auth
+		ethClient := h.Client.EthClient
+		addr := os.Getenv("BLOCKCHAIN_CONTRACT_ADDRESS")
+		contract, err := blockchain.GetContractInstance(ethClient, addr)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			transaction.Rollback()
+			return
+		}
 
-    hash := sha256.Sum256([]byte(data))
+		//hash the main components of the request
+		data := fmt.Sprintf("%d|%s|%s|%s",
+			statusHistory.Order_ID,
+			statusHistory.Order_Status,
+			statusHistory.Timestamp_History.Format(time.RFC3339),
+			statusHistory.Order_Location,
+		)
 
-    //store the hash in the blockchain
-    if err := StoreUpdateHash(auth, contract, uint64(statusHistory.Order_ID), hash); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
+		hash := sha256.Sum256([]byte(data))
+
+		//store the hash in the blockchain
+		if err := StoreUpdateHash(auth, contract, uint64(statusHistory.Order_ID), hash); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
+			transaction.Rollback()
+			return
+		}
+	}
+
+	//store the update into the database
+	if err := transaction.Create(&statusHistory).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
 		transaction.Rollback()
-        return
-    }
-
-    //store the update into the database
-    if err := transaction.Create(&statusHistory).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
-		transaction.Rollback()
-        return
-    }
+		return
+	}
 
 	//commits the transaction
 	transaction.Commit()
 
-    c.JSON(http.StatusOK, gin.H{"message": "Update stored successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Update stored successfully"})
 
 }
