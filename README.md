@@ -2,6 +2,8 @@
 
 Backend developed with Go, frontend with React (v18.3.1), deployed on Google Cloud Platform.
 
+The main development milestones and changes are reported in the [changelog](docs/CHANGELOG.MD) file.
+
 ## Quick Start
 
 To start developing use the following command to create the docker containers:
