@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 5174
+
+# Run the dev server
+# We will add '--host 0.0.0.0' in the package.json
+CMD ["npm", "run", "dev"]

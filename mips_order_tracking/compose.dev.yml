@@ -1,0 +1,16 @@
+services:
+    frontend:
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        ports:
+            - "5174:5174"
+        environment:
+            - PUBLIC_API_URL=http://localhost:8080
+        develop:
+          watch:
+            - action: sync
+              path: ./src
+              target: /app/src
+            - action: rebuild
+              path: ./package.json
