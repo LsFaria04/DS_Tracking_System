@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -63,9 +64,32 @@ func (h *VerificationHandler) VerifyOrder(c *gin.Context) {
 	}
 
 	response := requestModels.VerificationResponse{
-		TotalUpdates:     len(orderHistory),
-		BlockchainHashes: len(blockchainHashes),
-		Mismatches:       []string{},
+		TotalUpdates:      len(orderHistory),
+		BlockchainHashes:  len(blockchainHashes),
+		Mismatches:        []string{},
+		TransactionHashes: []string{},
+		ContractAddress:   addr,
+	}
+
+	// Get transaction hashes for all stored updates
+	// We'll retrieve the event logs to get transaction hashes
+	if ethClient != nil {
+		// Get the contract ABI for event parsing
+		filterOpts := &bind.FilterOpts{
+			Start: 0,
+			End:   nil,
+		}
+		
+		// Get OrderUpdateHashStored events for this order
+		iter, err := contract.FilterOrderUpdateHashStored(filterOpts)
+		if err == nil {
+			for iter.Next() {
+				if iter.Event.OrderId.Uint64() == uint64(orderIDBigInt.Int64()) {
+					response.TransactionHashes = append(response.TransactionHashes, iter.Event.Raw.TxHash.Hex())
+				}
+			}
+			iter.Close()
+		}
 	}
 
 	// Verify each update

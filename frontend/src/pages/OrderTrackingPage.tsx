@@ -324,9 +324,36 @@ export default function OrderPage() {
                                         {verificationResult.message}
                                     </p>
                                     {verificationResult.status !== 'ERROR' && (
-                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                                            {verificationResult.verified_updates}/{verificationResult.total_updates} updates verified
-                                        </p>
+                                        <>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                                                {verificationResult.verified_updates}/{verificationResult.total_updates} updates verified
+                                            </p>
+                                            {verificationResult.contract_address && (
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                    <span className="font-medium">Contract:</span> {verificationResult.contract_address}
+                                                </p>
+                                            )}
+                                            {verificationResult.transaction_hashes && verificationResult.transaction_hashes.length > 0 && (
+                                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        Transaction Hashes:
+                                                    </p>
+                                                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                                                        {verificationResult.transaction_hashes.map((hash, idx) => (
+                                                            <a
+                                                                key={idx}
+                                                                href={`https://sepolia.etherscan.io/tx/${hash}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-xs text-blue-600 dark:text-blue-400 hover:underline block font-mono break-all"
+                                                            >
+                                                                {hash}
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             )}
