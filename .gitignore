@@ -1,5 +1,4 @@
 # Terraform files with sensitive data
-
 terraform/.terraform/
 terraform/.terraform.lock.hcl
 terraform/terraform.tfstate
@@ -9,3 +8,36 @@ terraform/*.tfvars
 
 # Act secrets file (for local GitHub Actions testing)
 .secrets
+
+# Next.js build outputs
+.next/
+out/
+build/
+.vercel/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
