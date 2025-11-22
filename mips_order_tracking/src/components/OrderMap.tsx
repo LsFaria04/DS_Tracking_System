@@ -2,8 +2,10 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import type { OrderStatus } from '../types';
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import RoutingMachine from './RoutingMachine';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTruck } from '@fortawesome/free-solid-svg-icons';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -52,34 +54,56 @@ export default function OrderMap({
 }: OrderMapProps) {
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
+    const [totalDuration, setTotalDuration] = useState<number>(0);
+    const [totalDistance, setTotalDistance] = useState<number>(0);
+    const [routesCalculated, setRoutesCalculated] = useState<Set<number>>(new Set());
+
     // Sort history by timestamp ascending (old -> new) so the route is built chronologically
-    const sortedByTimeAsc = [...orderHistory].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    const sortedByTimeAsc = useMemo(() => 
+        [...orderHistory].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
+        [orderHistory]
+    );
 
     // Storages visited in chronological order
-    const locationsWithCoords = sortedByTimeAsc.filter(h => h.Storage);
-    const routeCoordinates: [number, number][] = locationsWithCoords.map(h => [
-        h.Storage!.Latitude,
-        h.Storage!.Longitude
-    ]);
+    const locationsWithCoords = useMemo(() => 
+        sortedByTimeAsc.filter(h => h.Storage),
+        [sortedByTimeAsc]
+    );
+    
+    const routeCoordinates: [number, number][] = useMemo(() => 
+        locationsWithCoords.map(h => [h.Storage!.Latitude, h.Storage!.Longitude]),
+        [locationsWithCoords]
+    );
 
     // Only accept numeric lat/lon (0 is valid) — check with typeof
-    const sellerCoords: [number, number] | null =
-        (typeof sellerLatitude === 'number' && typeof sellerLongitude === 'number') ? [sellerLatitude, sellerLongitude] : null;
-    const deliveryCoords: [number, number] | null =
-        (typeof deliveryLatitude === 'number' && typeof deliveryLongitude === 'number') ? [deliveryLatitude, deliveryLongitude] : null;
+    const sellerCoords: [number, number] | null = useMemo(() =>
+        (typeof sellerLatitude === 'number' && typeof sellerLongitude === 'number') 
+            ? [sellerLatitude, sellerLongitude] : null,
+        [sellerLatitude, sellerLongitude]
+    );
+    
+    const deliveryCoords: [number, number] | null = useMemo(() =>
+        (typeof deliveryLatitude === 'number' && typeof deliveryLongitude === 'number') 
+            ? [deliveryLatitude, deliveryLongitude] : null,
+        [deliveryLatitude, deliveryLongitude]
+    );
 
     // Center map on all points
-    const allCoords: [number, number][] = [
+    const allCoords: [number, number][] = useMemo(() => [
         ...(sellerCoords ? [sellerCoords] : []),
         ...routeCoordinates,
         ...(deliveryCoords ? [deliveryCoords] : [])
-    ];
-    const center: [number, number] = allCoords.length > 0
-        ? [
-            allCoords.reduce((sum, coord) => sum + coord[0], 0) / allCoords.length,
-            allCoords.reduce((sum, coord) => sum + coord[1], 0) / allCoords.length
-        ]
-        : [39.5, -8.0];
+    ], [sellerCoords, routeCoordinates, deliveryCoords]);
+
+    const center: [number, number] = useMemo(() => 
+        allCoords.length > 0
+            ? [
+                allCoords.reduce((sum, coord) => sum + coord[0], 0) / allCoords.length,
+                allCoords.reduce((sum, coord) => sum + coord[1], 0) / allCoords.length
+            ]
+            : [39.5, -8.0],
+        [allCoords]
+    );
 
 
     // Determine latest status using the sorted history (most recent timestamp)
@@ -101,20 +125,57 @@ export default function OrderMap({
         shouldZoomOut = true;
     }
 
-    const partialRoute: [number, number][] = [];
+    const partialRoute: [number, number][] = useMemo(() => {
+        const route: [number, number][] = [];
+        
+        // 1. Add seller
+        if (sellerCoords) {
+            route.push(sellerCoords);
+        }
 
-    // 1. Add seller
-    if (sellerCoords) {
-        partialRoute.push(sellerCoords);
-    }
+        // 2. Add all *visited* storage locations from history
+        route.push(...routeCoordinates);
 
-    // 2. Add all *visited* storage locations from history
-    partialRoute.push(...routeCoordinates);
+        // 3. ONLY add delivery location if the order is marked as delivered
+        if (currentStatus === 'DELIVERED' && deliveryCoords) {
+            route.push(deliveryCoords);
+        }
 
-    // 3. ONLY add delivery location if the order is marked as delivered
-    if (currentStatus === 'DELIVERED' && deliveryCoords) {
-        partialRoute.push(deliveryCoords);
-    }
+        return route;
+    }, [sellerCoords, routeCoordinates, currentStatus, deliveryCoords]);
+
+    const routeSegments: [[number, number], [number, number]][] = useMemo(() => {
+        const segments: [[number, number], [number, number]][] = [];
+        for (let i = 0; i < partialRoute.length - 1; i++) {
+            segments.push([partialRoute[i], partialRoute[i + 1]]);
+        }
+        return segments;
+    }, [partialRoute]);
+
+    // Reset metrics when route changes
+    useEffect(() => {
+        setTotalDistance(0);
+        setTotalDuration(0);
+        setRoutesCalculated(new Set());
+    }, [routeSegments]);
+
+    // Callback to accumulate route data - only once per segment
+    const handleRouteFound = useCallback((segmentIndex: number) => 
+        (summary: { distance: number; duration: number }) => {
+            setRoutesCalculated(prev => {
+                // Only add if we haven't calculated this segment yet
+                if (prev.has(segmentIndex)) return prev;
+                
+                const newSet = new Set(prev);
+                newSet.add(segmentIndex);
+                
+                setTotalDistance(prevDist => prevDist + summary.distance);
+                setTotalDuration(prevDur => prevDur + summary.duration);
+                
+                return newSet;
+            });
+        }, 
+    []);
 
     useEffect(() => {
         if (!mapInstance) return;
@@ -131,13 +192,16 @@ export default function OrderMap({
         }
     }, [mapInstance, shouldZoomOut, partialRoute, allCoords]);
 
-    const routeSegments: [[number, number], [number, number]][] = [];
-    for (let i = 0; i < partialRoute.length - 1; i++) {
-        routeSegments.push([partialRoute[i], partialRoute[i + 1]]);
-    }
-
     // 500km threshold to consider a route as sea route
     const SEA_ROUTE_THRESHOLD_METERS = 500 * 1000;
+
+    const landSegmentCount = useMemo(() => 
+        routeSegments.filter(seg => {
+            const distance = L.latLng(seg[0]).distanceTo(L.latLng(seg[1]));
+            return distance <= SEA_ROUTE_THRESHOLD_METERS;
+        }).length,
+        [routeSegments]
+    );
 
     if (locationsWithCoords.length === 0 && !sellerCoords) {
         return (
@@ -159,126 +223,180 @@ export default function OrderMap({
     };
 
     return (
-        <MapContainer
-            center={center}
-            zoom={7}
-            style={{ height: '500px', width: '100%', borderRadius: '0.5rem' }}
-            ref={setMapInstance}
-        >
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+        <div className="relative">
+            <MapContainer
+                center={center}
+                zoom={7}
+                style={{ height: '500px', width: '100%', borderRadius: '0.5rem' }}
+                ref={setMapInstance}
+            >
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
 
-            {routeSegments.map((segment, idx) => {
-                // Calculate straight-line distance (in meters)
-                const distance = L.latLng(segment[0]).distanceTo(L.latLng(segment[1]));
+                {routeSegments.map((segment, idx) => {
+                    // Calculate straight-line distance (in meters)
+                    const distance = L.latLng(segment[0]).distanceTo(L.latLng(segment[1]));
+                    const isSeaRoute = distance > SEA_ROUTE_THRESHOLD_METERS;
 
-                if (distance > SEA_ROUTE_THRESHOLD_METERS) {
-                    // It's a sea route, draw a straight line
-                    return (
-                        <Polyline
-                            key={idx}
-                            positions={segment}
-                            color={routeColor}
-                            weight={5}
-                            opacity={0.7}
-                            dashArray="5, 10"
-                        />
-                    );
-                } else {
-                    // It's a land route, use the routing machine
-                    return (
-                        <RoutingMachine
-                            key={idx}
-                            waypoints={segment}
-                            routeColor={routeColor}
-                        />
-                    );
-                }
-            })}
+                    if (isSeaRoute) {
+                        // It's a sea route, draw a straight line
+                        return (
+                            <Polyline
+                                key={`sea-${idx}`}
+                                positions={segment}
+                                pathOptions={{
+                                    color: routeColor,
+                                    weight: 5,
+                                    opacity: 0.7,
+                                    dashArray: '5, 10'
+                                }}
+                            />
+                        );
+                    } else {
+                        // It's a land route, use the routing machine
+                        return (
+                            <RoutingMachine
+                                key={`land-${idx}`}
+                                waypoints={segment}
+                                routeColor={routeColor}
+                                onRouteFound={handleRouteFound(idx)}
+                            />
+                        );
+                    }
+                })}
 
-            {/* Seller marker */}
-            {sellerCoords && (
-                <Marker position={sellerCoords} icon={sellerIcon}>
-                    <Popup>
-                        <div className="text-sm">
-                            <p className="font-bold">Seller</p>
-                            <p className="text-xs mt-1">{sellerAddress}</p>
-                        </div>
-                    </Popup>
-                </Marker>
-            )}
+                {/* Seller marker */}
+                {sellerCoords && (
+                    <Marker position={sellerCoords} icon={sellerIcon}>
+                        <Popup>
+                            <div className="text-sm">
+                                <p className="font-bold">Seller</p>
+                                <p className="text-xs mt-1">{sellerAddress}</p>
+                            </div>
+                        </Popup>
+                    </Marker>
+                )}
 
-            {/* Storage markers */}
-            {locationsWithCoords.map((history, idx) => (
-                <Marker
-                    key={idx}
-                    position={[history.Storage!.Latitude, history.Storage!.Longitude]}
-                >
-                    <Popup>
-                        <div className="text-sm">
-                            <p className="font-bold">{history.Storage!.Name}</p>
-                            <p>{history.Storage!.Address}</p>
-                            <p className="mt-2 text-xs text-gray-600">
-                                Status: {history.order_status}
-                            </p>
-                            <p className="text-xs text-gray-600">{history.note}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                                {new Date(history.timestamp).toLocaleString()}
-                            </p>
-                        </div>
-                    </Popup>
-                </Marker>
-            ))}
-
-            {/* Delivery marker */}
-            {deliveryCoords && (
-                <Marker position={deliveryCoords} icon={deliveryIcon}>
-                    <Popup>
-                        <div className="text-sm">
-                            <p className="font-bold text-green-600">Delivery Destination</p>
-                            <p className="text-xs mt-1">{deliveryAddress}</p>
-                        </div>
-                    </Popup>
-                </Marker>
-            )}
-
-            {/* Info overlays */}
-            {sellerAddress && (
-                <div className="leaflet-bottom leaflet-left" style={{ pointerEvents: 'none' }}>
-                    <div
-                        className="bg-white p-3 m-4 rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
-                        style={{ pointerEvents: 'auto' }}
-                        onClick={handleZoomToSeller}
+                {/* Storage markers */}
+                {locationsWithCoords.map((history, idx) => (
+                    <Marker
+                        key={idx}
+                        position={[history.Storage!.Latitude, history.Storage!.Longitude]}
                     >
-                        <p className="text-xs font-semibold text-gray-700">Seller:</p>
-                        <p className="text-xs text-gray-600">{sellerAddress}</p>
-                        {sellerCoords && (
-                            <p className="text-xs text-red-600 mt-1 font-semibold">
-                                📍 Click to zoom to seller
-                            </p>
-                        )}
+                        <Popup>
+                            <div className="text-sm">
+                                <p className="font-bold">{history.Storage!.Name}</p>
+                                <p>{history.Storage!.Address}</p>
+                                <p className="mt-2 text-xs text-gray-600">
+                                    Status: {history.order_status}
+                                </p>
+                                <p className="text-xs text-gray-600">{history.note}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {new Date(history.timestamp).toLocaleString()}
+                                </p>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+
+                {/* Delivery marker */}
+                {deliveryCoords && (
+                    <Marker position={deliveryCoords} icon={deliveryIcon}>
+                        <Popup>
+                            <div className="text-sm">
+                                <p className="font-bold text-green-600">Delivery Destination</p>
+                                <p className="text-xs mt-1">{deliveryAddress}</p>
+                            </div>
+                        </Popup>
+                    </Marker>
+                )}
+
+                {/* Info overlays */}
+                {sellerAddress && (
+                    <div className="leaflet-bottom leaflet-left" style={{ pointerEvents: 'none' }}>
+                        <div
+                            className="bg-white p-3 m-4 rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+                            style={{ pointerEvents: 'auto' }}
+                            onClick={handleZoomToSeller}
+                        >
+                            <p className="text-xs font-semibold text-gray-700">Seller:</p>
+                            <p className="text-xs text-gray-600">{sellerAddress}</p>
+                            {sellerCoords && (
+                                <p className="text-xs text-red-600 mt-1 font-semibold">
+                                    📍 Click to zoom to seller
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+                {deliveryAddress && (
+                    <div className="leaflet-bottom leaflet-right" style={{ pointerEvents: 'none' }}>
+                        <div
+                            className="bg-white p-3 m-4 rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+                            style={{ pointerEvents: 'auto' }}
+                            onClick={handleZoomToDelivery}
+                        >
+                            <p className="text-xs font-semibold text-gray-700">Delivery To:</p>
+                            <p className="text-xs text-gray-600">{deliveryAddress}</p>
+                            {deliveryCoords && (
+                                <p className="text-xs text-green-600 mt-1 font-semibold">
+                                    📍 Click to zoom to destination
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </MapContainer>
+
+            {/* Show estimate only when all land routes are calculated and order is in active transit */}
+            {totalDuration > 0 && routesCalculated.size === landSegmentCount && 
+                currentStatus !== 'DELIVERED' && 
+                currentStatus !== 'CANCELLED' && 
+                currentStatus !== 'RETURNED' && 
+                currentStatus !== 'FAILED DELIVERY' && 
+                currentStatus !== 'PROCESSING' && (
+                <div className="absolute top-4 right-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-4 max-w-xs z-[1000]">
+                    <div className="flex items-center gap-2 mb-3">
+                        <FontAwesomeIcon icon={faTruck} className="text-xl text-blue-600 dark:text-blue-400" />
+                        <h3 className="font-semibold text-gray-900 dark:text-white">Estimated Delivery</h3>
+                    </div>
+                    
+                    <div className="space-y-3 text-sm">
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-600 dark:text-gray-400">Travel time:</span>
+                            <span className="font-medium text-gray-900 dark:text-white text-lg">
+                                {(() => {
+                                    const totalMinutes = Math.round(totalDuration / 60);
+                                    const days = Math.floor(totalMinutes / (24 * 60));
+                                    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+                                    const minutes = totalMinutes % 60;
+                                    
+                                    if (days > 0) {
+                                        return `~${days}d ${hours}h`;
+                                    } else if (hours > 0) {
+                                        return `~${hours}h ${minutes}min`;
+                                    } else {
+                                        return `~${minutes}min`;
+                                    }
+                                })()}
+                            </span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <span className="text-gray-600 dark:text-gray-400">Distance:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                                {(totalDistance / 1000).toFixed(1)} km
+                            </span>
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            Based on current route (driving only)
+                        </p>
                     </div>
                 </div>
             )}
-            {deliveryAddress && (
-                <div className="leaflet-bottom leaflet-right" style={{ pointerEvents: 'none' }}>
-                    <div
-                        className="bg-white p-3 m-4 rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
-                        style={{ pointerEvents: 'auto' }}
-                        onClick={handleZoomToDelivery}
-                    >
-                        <p className="text-xs font-semibold text-gray-700">Delivery To:</p>
-                        <p className="text-xs text-gray-600">{deliveryAddress}</p>
-                        {deliveryCoords && (
-                            <p className="text-xs text-green-600 mt-1 font-semibold">
-                                📍 Click to zoom to destination
-                            </p>
-                        )}
-                    </div>
-                </div>
-            )}
-        </MapContainer>
+        </div>
     );
 }
