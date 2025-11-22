@@ -227,7 +227,8 @@ export default function OrderMap({
                 if (currentLocation[0] !== deliveryCoords[0] || currentLocation[1] !== deliveryCoords[1]) {
                     getTomTomTrafficData(currentLocation, deliveryCoords, tomtomKey)
                         .then(data => {
-                            if (data && data.trafficDelay > 0) {
+                            // Only show traffic delay if it's at least 1 minute (60 seconds)
+                            if (data && data.trafficDelay >= 60) {
                                 setEstimatedTrafficDelay(data.trafficDelay);
                             } else {
                                 setEstimatedTrafficDelay(0);
