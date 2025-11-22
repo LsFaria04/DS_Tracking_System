@@ -1,6 +1,9 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import type { BackendOrder, BackendOrderProduct, BackendOrderStatus, OrderData, OrderStatus, VerificationResult } from "../types";
+import type { CarbonFootprintData } from "../utils/carbonFootprint";
+import { calculateCarbonFootprint } from "../utils/carbonFootprint";
+import CarbonFootprint from "../components/CarbonFootprint";
 
 const OrderMap = lazy(() => import('../components/OrderMap'));
 
@@ -12,6 +15,7 @@ export default function OrderPage() {
     const [error, setError] = useState<string | null>(null);
     const [verifying, setVerifying] = useState(false);
     const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+    const [carbonFootprint, setCarbonFootprint] = useState<CarbonFootprintData | null>(null);
 
     useEffect(() => {
         const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
@@ -101,6 +105,12 @@ export default function OrderPage() {
                 console.warn('Failed to load order history');
             });
     }, [id]);
+
+    // Carbon footprint is calculated by OrderMap via callback
+    const handleCarbonFootprintData = useCallback((data: { totalDistance: number; routeSegments: { distance: number; isAir: boolean }[] }) => {
+        const footprint = calculateCarbonFootprint(data.totalDistance, data.routeSegments);
+        setCarbonFootprint(footprint);
+    }, []);
 
     const handleVerifyBlockchain = async () => {
         setVerifying(true);
@@ -244,10 +254,18 @@ export default function OrderPage() {
                             sellerAddress={order.seller_address}
                             sellerLatitude={order.seller_latitude}
                             sellerLongitude={order.seller_longitude}
+                            onCarbonFootprintData={handleCarbonFootprintData}
                         />
                     )}
                 </Suspense>
             </section>
+
+            {/* Carbon Footprint */}
+            {carbonFootprint && (
+                <section>
+                    <CarbonFootprint data={carbonFootprint} />
+                </section>
+            )}
 
             {/* Header */}
             <header className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">

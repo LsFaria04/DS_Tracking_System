@@ -5,7 +5,7 @@ import * as L from 'leaflet';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import RoutingMachine from './RoutingMachine';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTruck } from '@fortawesome/free-solid-svg-icons';
+import { faTruck, faMapPin } from '@fortawesome/free-solid-svg-icons';
 import { getTomTomTrafficData } from '../utils/trafficApi';
 
 // Uncomment the line below to add a manual traffic delay for frontend testing
@@ -47,6 +47,7 @@ interface OrderMapProps {
     sellerAddress?: string;
     sellerLatitude?: number;
     sellerLongitude?: number;
+    onCarbonFootprintData?: (data: { totalDistance: number; routeSegments: { distance: number; isAir: boolean }[] }) => void;
 }
 
 export default function OrderMap({
@@ -56,7 +57,8 @@ export default function OrderMap({
     deliveryLongitude,
     sellerAddress,
     sellerLatitude,
-    sellerLongitude
+    sellerLongitude,
+    onCarbonFootprintData
 }: OrderMapProps) {
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
@@ -258,6 +260,25 @@ export default function OrderMap({
         }
     }, [routesCalculated.size, landSegmentCount, totalDuration, totalDistance, partialRoute, deliveryCoords, currentStatus]);
 
+    // Emit carbon footprint data when routes are calculated
+    useEffect(() => {
+        if (routesCalculated.size === landSegmentCount && totalDistance > 0 && onCarbonFootprintData) {
+            // Build route segments with air/land classification
+            const segments = routeSegments.map(seg => {
+                const distance = L.latLng(seg[0]).distanceTo(L.latLng(seg[1]));
+                return {
+                    distance,
+                    isAir: distance > SEA_ROUTE_THRESHOLD_METERS
+                };
+            });
+            
+            onCarbonFootprintData({
+                totalDistance,
+                routeSegments: segments
+            });
+        }
+    }, [routesCalculated.size, landSegmentCount, totalDistance, routeSegments, onCarbonFootprintData]);
+
     if (locationsWithCoords.length === 0 && !sellerCoords) {
         return (
             <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -379,8 +400,8 @@ export default function OrderMap({
                             <p className="text-xs font-semibold text-gray-700">Seller:</p>
                             <p className="text-xs text-gray-600">{sellerAddress}</p>
                             {sellerCoords && (
-                                <p className="text-xs text-red-600 mt-1 font-semibold">
-                                    📍 Click to zoom to seller
+                                <p className="text-xs text-red-600 mt-1 font-semibold flex items-center gap-1">
+                                    <FontAwesomeIcon icon={faMapPin} /> Click to zoom to seller
                                 </p>
                             )}
                         </div>
@@ -396,8 +417,8 @@ export default function OrderMap({
                             <p className="text-xs font-semibold text-gray-700">Delivery To:</p>
                             <p className="text-xs text-gray-600">{deliveryAddress}</p>
                             {deliveryCoords && (
-                                <p className="text-xs text-green-600 mt-1 font-semibold">
-                                    📍 Click to zoom to destination
+                                <p className="text-xs text-green-600 mt-1 font-semibold flex items-center gap-1">
+                                    <FontAwesomeIcon icon={faMapPin} /> Click to zoom to destination
                                 </p>
                             )}
                         </div>
