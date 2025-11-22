@@ -8,6 +8,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTruck } from '@fortawesome/free-solid-svg-icons';
 import { getTomTomTrafficData } from '../utils/trafficApi';
 
+// Uncomment the line below to add a manual traffic delay for frontend testing
+// Comment it out to use real TomTom data
+// const MANUAL_TRAFFIC_DELAY = 15 * 60; // 15 minutes in seconds
+const MANUAL_TRAFFIC_DELAY = 0; // No manual delay (use real data)
+
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -220,6 +225,12 @@ export default function OrderMap({
         if (routesCalculated.size === landSegmentCount && totalDuration > 0 && totalDistance > 0) {
             const tomtomKey = process.env.PUBLIC_TOMTOM_API_KEY;
             
+            // Check if manual delay is set for testing
+            if (MANUAL_TRAFFIC_DELAY > 0) {
+                setEstimatedTrafficDelay(MANUAL_TRAFFIC_DELAY);
+                return;
+            }
+            
             if (tomtomKey && partialRoute.length >= 2 && deliveryCoords) {
                 const currentLocation = partialRoute[partialRoute.length - 1];
                 
@@ -401,7 +412,7 @@ export default function OrderMap({
                 currentStatus !== 'RETURNED' && 
                 currentStatus !== 'FAILED DELIVERY' && 
                 currentStatus !== 'PROCESSING' && (
-                <div className="absolute top-4 right-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-4 max-w-xs z-[1000]">
+                <div className="absolute top-4 right-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-4 min-w-[280px] z-[1000]">
                     <div className="flex items-center gap-2 mb-3">
                         <FontAwesomeIcon icon={faTruck} className="text-xl text-blue-600 dark:text-blue-400" />
                         <h3 className="font-semibold text-gray-900 dark:text-white">Estimated Delivery</h3>
