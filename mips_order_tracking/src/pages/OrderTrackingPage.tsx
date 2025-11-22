@@ -23,7 +23,6 @@ export default function OrderPage() {
             })
             .then(data => {
                 const o = data.order as BackendOrder;
-                console.log(o)
                 setOrder({
                     tracking_code: o.Tracking_Code,
                     delivery_estimate: o.Delivery_Estimate,

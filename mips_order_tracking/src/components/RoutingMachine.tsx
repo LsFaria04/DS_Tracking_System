@@ -6,6 +6,7 @@ import 'leaflet-routing-machine';
 interface RoutingProps {
     waypoints: [number, number][];
     routeColor: 'green' | 'red' | 'blue';
+    onRouteFound?: (summary: { distance: number; duration: number }) => void;
 }
 
 // Icon fix (unchanged)
@@ -17,7 +18,7 @@ L.Icon.Default.mergeOptions({
 });
 
 
-export default function RoutingMachine({ waypoints, routeColor }: RoutingProps) {
+export default function RoutingMachine({ waypoints, routeColor, onRouteFound }: RoutingProps) {
     const map = useMap();
     const routingRef = useRef<L.Routing.Control | null>(null);
 
@@ -55,6 +56,18 @@ export default function RoutingMachine({ waypoints, routeColor }: RoutingProps) 
             }
         }).addTo(map);
 
+        routingControl.on('routesfound', (e: any) => {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            
+            if (onRouteFound) {
+                onRouteFound({
+                    distance: summary.totalDistance, // meters
+                    duration: summary.totalTime // seconds
+                });
+            }
+        });
+
         routingRef.current = routingControl;
 
         return () => {
@@ -67,7 +80,7 @@ export default function RoutingMachine({ waypoints, routeColor }: RoutingProps) 
             } catch (e) {}
         };
 
-    }, [map, waypoints, routeColor]);
+    }, [map, waypoints, routeColor, onRouteFound]);
 
     return null;
 }
