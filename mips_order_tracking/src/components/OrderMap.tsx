@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import RoutingMachine from './RoutingMachine';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTruck } from '@fortawesome/free-solid-svg-icons';
+import { getTomTomTrafficData } from '../utils/trafficApi';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -57,6 +58,7 @@ export default function OrderMap({
     const [totalDuration, setTotalDuration] = useState<number>(0);
     const [totalDistance, setTotalDistance] = useState<number>(0);
     const [routesCalculated, setRoutesCalculated] = useState<Set<number>>(new Set());
+    const [estimatedTrafficDelay, setEstimatedTrafficDelay] = useState<number>(0);
 
     // Sort history by timestamp ascending (old -> new) so the route is built chronologically
     const sortedByTimeAsc = useMemo(() => 
@@ -157,6 +159,7 @@ export default function OrderMap({
         setTotalDistance(0);
         setTotalDuration(0);
         setRoutesCalculated(new Set());
+        setEstimatedTrafficDelay(0);
     }, [routeSegments]);
 
     // Callback to accumulate route data - only once per segment
@@ -202,6 +205,46 @@ export default function OrderMap({
         }).length,
         [routeSegments]
     );
+
+    // Calculate traffic delay when all routes are calculated
+    useEffect(() => {
+        // Only calculate for orders in active transit
+        if (currentStatus === 'DELIVERED' || 
+            currentStatus === 'CANCELLED' || 
+            currentStatus === 'RETURNED' || 
+            currentStatus === 'FAILED DELIVERY' || 
+            currentStatus === 'PROCESSING') {
+            return;
+        }
+        
+        if (routesCalculated.size === landSegmentCount && totalDuration > 0 && totalDistance > 0) {
+            const tomtomKey = process.env.PUBLIC_TOMTOM_API_KEY;
+            
+            if (tomtomKey && partialRoute.length >= 2 && deliveryCoords) {
+                const currentLocation = partialRoute[partialRoute.length - 1];
+                
+                // Check if current location is different from delivery destination
+                if (currentLocation[0] !== deliveryCoords[0] || currentLocation[1] !== deliveryCoords[1]) {
+                    getTomTomTrafficData(currentLocation, deliveryCoords, tomtomKey)
+                        .then(data => {
+                            if (data && data.trafficDelay > 0) {
+                                setEstimatedTrafficDelay(data.trafficDelay);
+                            } else {
+                                setEstimatedTrafficDelay(0);
+                            }
+                        })
+                        .catch(error => {
+                            console.warn('Failed to fetch traffic data:', error);
+                            setEstimatedTrafficDelay(0);
+                        });
+                } else {
+                    setEstimatedTrafficDelay(0);
+                }
+            } else {
+                setEstimatedTrafficDelay(0);
+            }
+        }
+    }, [routesCalculated.size, landSegmentCount, totalDuration, totalDistance, partialRoute, deliveryCoords, currentStatus]);
 
     if (locationsWithCoords.length === 0 && !sellerCoords) {
         return (
@@ -384,6 +427,47 @@ export default function OrderMap({
                             </span>
                         </div>
                         
+                        {estimatedTrafficDelay > 0 && (
+                            <div className="flex justify-between items-center">
+                                <span className="text-orange-600 dark:text-orange-400 text-xs">+ Traffic delay:</span>
+                                <span className="font-medium text-orange-600 dark:text-orange-400">
+                                    {(() => {
+                                        const delayMinutes = Math.round(estimatedTrafficDelay / 60);
+                                        const hours = Math.floor(delayMinutes / 60);
+                                        const minutes = delayMinutes % 60;
+                                        
+                                        if (hours > 0) {
+                                            return `~${hours}h ${minutes}min`;
+                                        } else {
+                                            return `~${minutes}min`;
+                                        }
+                                    })()}
+                                </span>
+                            </div>
+                        )}
+                        
+                        {estimatedTrafficDelay > 0 && (
+                            <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                                <span className="text-gray-900 dark:text-white font-semibold">Total with traffic:</span>
+                                <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">
+                                    {(() => {
+                                        const totalWithTraffic = Math.round((totalDuration + estimatedTrafficDelay) / 60);
+                                        const days = Math.floor(totalWithTraffic / (24 * 60));
+                                        const hours = Math.floor((totalWithTraffic % (24 * 60)) / 60);
+                                        const minutes = totalWithTraffic % 60;
+                                        
+                                        if (days > 0) {
+                                            return `~${days}d ${hours}h`;
+                                        } else if (hours > 0) {
+                                            return `~${hours}h ${minutes}min`;
+                                        } else {
+                                            return `~${minutes}min`;
+                                        }
+                                    })()}
+                                </span>
+                            </div>
+                        )}
+                        
                         <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
                             <span className="text-gray-600 dark:text-gray-400">Distance:</span>
                             <span className="font-medium text-gray-900 dark:text-white">
@@ -392,7 +476,9 @@ export default function OrderMap({
                         </div>
                         
                         <p className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
-                            Based on current route (driving only)
+                            {estimatedTrafficDelay > 0 
+                                ? 'Includes real-time traffic delays' 
+                                : 'Includes real-time traffic (no delays detected)'}
                         </p>
                     </div>
                 </div>
