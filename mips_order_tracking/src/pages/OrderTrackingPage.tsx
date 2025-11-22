@@ -94,6 +94,7 @@ export default function OrderPage() {
                         } : null
                     })
                 });
+                history.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
                 setOrderHistory(history);
             })
             .catch(() => {
@@ -427,7 +428,7 @@ export default function OrderPage() {
                                         )}
                                         
                                         {/* The dot - larger for the last (current state) one */}
-                                        <div className={`${status.color} rounded-full ${isLast ? 'w-8 h-8' : 'w-6 h-6'} shrink-0 border-4 border-white dark:border-gray-950`}></div>
+                                        <div className={`${status.color} rounded-full ${isFirst ? 'w-8 h-8' : 'w-6 h-6'} shrink-0 border-4 border-white dark:border-gray-950`}></div>
                                         
                                         {/* Bottom connecting line - only if not last */}
                                         {!isLast && (

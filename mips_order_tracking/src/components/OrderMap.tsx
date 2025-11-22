@@ -52,15 +52,21 @@ export default function OrderMap({
 }: OrderMapProps) {
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
-    const locationsWithCoords = orderHistory.filter(h => h.Storage);
+    // Sort history by timestamp ascending (old -> new) so the route is built chronologically
+    const sortedByTimeAsc = [...orderHistory].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    // Storages visited in chronological order
+    const locationsWithCoords = sortedByTimeAsc.filter(h => h.Storage);
     const routeCoordinates: [number, number][] = locationsWithCoords.map(h => [
         h.Storage!.Latitude,
         h.Storage!.Longitude
     ]);
+
+    // Only accept numeric lat/lon (0 is valid) — check with typeof
     const sellerCoords: [number, number] | null =
-        sellerLatitude && sellerLongitude ? [sellerLatitude, sellerLongitude] : null;
+        (typeof sellerLatitude === 'number' && typeof sellerLongitude === 'number') ? [sellerLatitude, sellerLongitude] : null;
     const deliveryCoords: [number, number] | null =
-        deliveryLatitude && deliveryLongitude ? [deliveryLatitude, deliveryLongitude] : null;
+        (typeof deliveryLatitude === 'number' && typeof deliveryLongitude === 'number') ? [deliveryLatitude, deliveryLongitude] : null;
 
     // Center map on all points
     const allCoords: [number, number][] = [
@@ -76,7 +82,8 @@ export default function OrderMap({
         : [39.5, -8.0];
 
 
-    const latestStatus = orderHistory.length > 0 ? orderHistory[orderHistory.length - 1] : null;
+    // Determine latest status using the sorted history (most recent timestamp)
+    const latestStatus = sortedByTimeAsc.length > 0 ? sortedByTimeAsc[sortedByTimeAsc.length - 1] : null;
     const currentStatus = latestStatus?.order_status;
     
     let routeColor: 'green' | 'red' | 'blue' = 'blue';
