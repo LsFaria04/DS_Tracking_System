@@ -335,24 +335,9 @@ export default function OrderPage() {
                                                 </p>
                                             )}
                                             {verificationResult.transaction_hashes && verificationResult.transaction_hashes.length > 0 && (
-                                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                        Transaction Hashes:
-                                                    </p>
-                                                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                                                        {verificationResult.transaction_hashes.map((hash, idx) => (
-                                                            <a
-                                                                key={idx}
-                                                                href={`https://sepolia.etherscan.io/tx/${hash}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-xs text-blue-600 dark:text-blue-400 hover:underline block font-mono break-all"
-                                                            >
-                                                                {hash}
-                                                            </a>
-                                                        ))}
-                                                    </div>
-                                                </div>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                                                    <span className="font-medium">✓</span> Blockchain links shown in tracking history below
+                                                </p>
                                             )}
                                         </>
                                     )}
@@ -444,6 +429,12 @@ export default function OrderPage() {
                                 border: 'border-gray-400'
                             };
                             
+                            // Get the blockchain transaction hash for this status update
+                            // Order history is DESC (newest first), but blockchain hashes are ASC (oldest first)
+                            // So we need to reverse the index
+                            const reversedIdx = orderHistory.length - 1 - idx;
+                            const txHash = verificationResult?.transaction_hashes?.[reversedIdx];
+                            
                             return (
                                 <li key={idx} className="relative flex">
                                     {/* Left timeline column */}
@@ -484,6 +475,24 @@ export default function OrderPage() {
                                                         <p className="font-medium text-gray-900 dark:text-white">{s.Storage.Name}</p>
                                                         <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">{s.Storage.Address}</p>
                                                     </div>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Blockchain verification link */}
+                                            {txHash && (
+                                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-medium text-green-600 dark:text-green-400">Verified on Blockchain</span>
+                                                    </div>
+                                                    <a
+                                                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-mono break-all mt-1 block"
+                                                        title="View transaction on Etherscan"
+                                                    >
+                                                        {txHash}
+                                                    </a>
                                                 </div>
                                             )}
                                         </div>
