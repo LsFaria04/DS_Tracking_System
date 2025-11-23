@@ -221,6 +221,7 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context){
 
 
 	result = h.DB.Save(&order)
+
 	//check if there was an error with the database request
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
