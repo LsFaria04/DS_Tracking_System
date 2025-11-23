@@ -4,6 +4,7 @@ import type { BackendOrder, BackendOrderProduct, BackendOrderStatus, OrderData, 
 import type { CarbonFootprintData } from "../utils/carbonFootprint";
 import { calculateCarbonFootprint } from "../utils/carbonFootprint";
 import CarbonFootprint from "../components/CarbonFootprint";
+import UpdateModal from "../components/UpdateModal";
 
 const OrderMap = lazy(() => import('../components/OrderMap'));
 
@@ -16,6 +17,7 @@ export default function OrderPage() {
     const [verifying, setVerifying] = useState(false);
     const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
     const [carbonFootprint, setCarbonFootprint] = useState<CarbonFootprintData | null>(null);
+    const [showUpdateModal, setUpdateModal] = useState(false);
 
     useEffect(() => {
         const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
@@ -235,6 +237,7 @@ export default function OrderPage() {
         </div>
     );
 
+
     return (
         <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
             {/* Map */}
@@ -270,7 +273,7 @@ export default function OrderPage() {
             {/* Header */}
             <header className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
-                    <div className="flex-1 space-y-4">
+                    <div className="flex-1 space-y-4 ">
                         <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Order {id}</h1>
                         <div className="space-y-2 text-sm">
                             <div className="flex items-center gap-3">
@@ -285,6 +288,7 @@ export default function OrderPage() {
                                 <span className="text-gray-500 dark:text-gray-400 w-28">Delivery To</span>
                                 <span className="text-gray-900 dark:text-white">{order.delivery_address}</span>
                             </div>
+                             
                         </div>
                     </div>
                     <div className="flex flex-col items-start md:items-end gap-4 min-w-[200px]">
@@ -297,12 +301,24 @@ export default function OrderPage() {
                             <p className="text-3xl font-semibold text-gray-900 dark:text-white">{order.price}€</p>
                         </div>
                         
+                        
+                    </div>
+                    
+                </div>
+                <div className="flex justify-between gap-4 mt-6">
+                                                <button
+                                onClick={() => setUpdateModal(true)}
+                                disabled={showUpdateModal}
+                                className="min-w-[200px] mt-4 px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    Update Order
+                        </button>
                         {/* Blockchain Verification */}
-                        <div className="w-full pt-4 border-t border-gray-200 dark:border-gray-800">
+                        <div className="min-w-[200px] max-w-20 pt-4 border-t border-gray-200 dark:border-gray-800">
                             <button
                                 onClick={handleVerifyBlockchain}
                                 disabled={verifying}
-                                className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {verifying ? (
                                     <>
@@ -350,9 +366,13 @@ export default function OrderPage() {
                                 </div>
                             )}
                         </div>
-                    </div>
                 </div>
             </header>
+
+            {/*Modal for to update the order information*/ }
+            <UpdateModal show={showUpdateModal} onClose={() => setUpdateModal(false)} onUpdate={() => {}}>
+                                <p>teste</p>
+            </UpdateModal>
 
             {/* Products */}
             <section>
