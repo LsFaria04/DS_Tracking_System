@@ -100,6 +100,9 @@ jobs:
       working-directory: frontend
       env:
         NEXT_PUBLIC_API_URL: https://tracking-status-edneicy3ca-ew.a.run.app
+        JUMPSELLER_BASE_URL: https://api.jumpseller.com/v1
+        LOGIN_JUMPSELLER_API: ${{ secrets.LOGIN_JUMPSELLER_API }}
+        TOKEN_JUMPSELLER_API: ${{ secrets.TOKEN_JUMPSELLER_API }}
       run: |
         docker build -f Dockerfile --build-arg NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
         docker push returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }}

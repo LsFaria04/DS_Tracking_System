@@ -9,8 +9,8 @@ docker push returnedft/tracking-status:$TAG
 
 # Frontend  
 Write-Host "Building frontend..." -ForegroundColor Yellow
-Set-Location ..\frontend
-docker build --build-arg VITE_API_URL=https://tracking-status-edneicy3ca-ew.a.run.app -t returnedft/tracking-status-frontend:$TAG .
+Set-Location ..\mips_order_tracking
+docker build --build-arg VITE_API_URL=https://tracking-status-138871440259.europe-west1.run.app -t returnedft/tracking-status-frontend:$TAG .
 docker push returnedft/tracking-status-frontend:$TAG
 
 # Terraform
