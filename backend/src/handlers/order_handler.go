@@ -178,6 +178,7 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context){
 	//get the order update request
 	var input requestModels.UpdateOrderRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Input"})
 		return
 	}
@@ -199,11 +200,15 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context){
 	var order_update *models.OrderStatusHistory
 	result = h.DB.Where("order_id = ?", order.Id).Order("timestamp_history desc").First(&order_update)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			//no need to through an error
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+			}
 	}
 
-	if (order_update != nil) && (order_update.Order_Status != "PROCESSING"){
+	if (order_update != nil) && ((order_update.Order_Status != "PROCESSING")){
 		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot change an order that is already shipped"})
 		return
 	}

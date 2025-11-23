@@ -5,6 +5,7 @@ import type { CarbonFootprintData } from "../utils/carbonFootprint";
 import { calculateCarbonFootprint } from "../utils/carbonFootprint";
 import CarbonFootprint from "../components/CarbonFootprint";
 import UpdateModal from "../components/UpdateModal";
+import getCoordinatesFromAddress from "../utils/address_coordinates";
 
 const OrderMap = lazy(() => import('../components/OrderMap'));
 
@@ -18,6 +19,11 @@ export default function OrderPage() {
     const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
     const [carbonFootprint, setCarbonFootprint] = useState<CarbonFootprintData | null>(null);
     const [showUpdateModal, setUpdateModal] = useState(false);
+    const [address, setAddress] = useState("");
+    const [statusMessage, setStatusMessage] = useState<string | null>(null);
+    const [statusType, setStatusType] = useState<"success" | "error" | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+
 
     useEffect(() => {
         const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
@@ -48,6 +54,7 @@ export default function OrderPage() {
                     })) || [],
                     statusHistory: []
                 });
+
             })
             .catch(() => {
                 setError('Failed to load order. Please try again.');
@@ -148,6 +155,77 @@ export default function OrderPage() {
             setVerifying(false);
         }
     };
+
+    const handleOrderUpdate = async () => {
+        setIsUpdating(true);
+        setStatusMessage(null); // reset previous message
+
+        const result = await getCoordinatesFromAddress(address);
+
+        if(!result){
+            setStatusMessage("Invalid Address.");
+            setStatusType("error");
+            setIsUpdating(false);
+            return
+        }
+
+        try {
+            const apiUrl = process.env.PUBLIC_API_URL || "http://localhost:8080";
+            const response = await fetch(`${apiUrl}/order/update`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+                {
+                    order_id: Number(id),
+                    delivery_address: address,
+                    delivery_latitude: Number(result?.lat),
+                    delivery_longitude: Number(result?.lon),
+                }
+            ),
+            });
+
+            if (!response.ok) {
+                if(response.status == 403){
+                    setStatusMessage("Update failed. Cannot change an order that is already shipped.");
+                }
+                else{
+                    setStatusMessage("Update failed. Please try again.");
+                }
+                setStatusType("error");
+                setIsUpdating(false);
+            return;
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+                setStatusMessage("Update failed.");
+                setStatusType("error");
+
+            } else {
+                setStatusMessage("Order updated successfully!");
+                setStatusType("success");
+
+                setOrder((prev) =>
+                    prev
+                    ? {
+                        ...prev,
+                        delivery_address: address,
+                        delivery_latitude: Number(result?.lat),
+                        delivery_longitude: Number(result?.lon),
+                        }
+                    : prev
+                );
+                
+            }
+        } catch (error) {
+            setStatusMessage("Network error. Please try again.");
+            setStatusType("error");
+        }
+
+        setIsUpdating(false);
+    };
+
 
 
 
@@ -370,8 +448,28 @@ export default function OrderPage() {
             </header>
 
             {/*Modal for to update the order information*/ }
-            <UpdateModal show={showUpdateModal} onClose={() => setUpdateModal(false)} onUpdate={() => {}}>
-                                <p>teste</p>
+            <UpdateModal show={showUpdateModal} onClose={() => setUpdateModal(false)} isUpdating={isUpdating} onUpdate={handleOrderUpdate}>
+                 <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Update Delivery Address</h2>
+                   {/* Feedback message injected as children */}
+                    {statusMessage && (
+                        <div
+                        className={`mb-4 p-3 rounded-lg text-sm ${
+                            statusType === "success"
+                            ? "bg-green-50 text-green-700 border border-green-200"
+                            : "bg-red-50 text-red-700 border border-red-200"
+                        }`}
+                        >
+                        {statusMessage}
+                        </div>
+                    )}
+                    {/* Text box for delivery address */}
+                    <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter new delivery address"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                    />
             </UpdateModal>
 
             {/* Products */}
