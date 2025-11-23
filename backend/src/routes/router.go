@@ -24,6 +24,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 	router.GET("/order/:id", orderHandler.GetOrderByID)
 	router.GET("/order/verify/:order_id", verificationHandler.VerifyOrder)
 	router.POST("/order/add", orderHandler.AddOrder)
+	router.POST("/order/update", orderHandler.UpdateOrder)
 
 	//routes for order products (using order-products path to avoid conflicts)
 	router.GET("/order-products", orderProductHandler.GetOrderProducts) // Query param: ?order_id=X
