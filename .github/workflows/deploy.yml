@@ -104,7 +104,7 @@ jobs:
         LOGIN_JUMPSELLER_API: ${{ secrets.LOGIN_JUMPSELLER_API }}
         TOKEN_JUMPSELLER_API: ${{ secrets.TOKEN_JUMPSELLER_API }}
       run: |
-        docker build -f Dockerfile --build-arg NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
+        docker build -f Dockerfile --build-arg PUBLIC_API_URL=$PUBLIC_API_URL -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
         docker push returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }}
 
     - name: Setup Terraform
@@ -181,4 +181,3 @@ jobs:
         echo "Backend URL: $(gcloud run services describe tracking-status --region=europe-west1 --format='value(status.url)')"
         echo "Frontend URL: $(gcloud run services describe tracking-status-frontend --region=europe-west1 --format='value(status.url)')"
 
-      
