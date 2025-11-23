@@ -61,7 +61,10 @@ func (h *OrderHandler) AddOrder(c *gin.Context) {
 	order.Tracking_Code = trackingCode
 	order.Customer_ID = input.CustomerId
 	order.Delivery_Address = input.DeliveryAddress
-	order.Delivery_Estimate = time.Now().Add(48 * time.Hour) //just a mock estimate for now
+
+	estimate_time := utils.EstimateDeliveryTime(input.SellerLatitude, input.SellerLongitude, input.DeliveryLatitude, input.DeliveryLongitude, 30)
+	order.Delivery_Estimate = time.Now().Add(time.Duration(estimate_time * float64(time.Hour)))
+
 	order.Delivery_Latitude = input.DeliveryLatitude
 	order.Delivery_Longitude = input.DeliveryLongitude
 	order.Seller_Address = input.SellerAddress
