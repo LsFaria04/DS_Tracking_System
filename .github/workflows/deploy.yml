@@ -104,7 +104,11 @@ jobs:
         LOGIN_JUMPSELLER_API: ${{ secrets.LOGIN_JUMPSELLER_API }}
         TOKEN_JUMPSELLER_API: ${{ secrets.TOKEN_JUMPSELLER_API }}
       run: |
-        docker build -f Dockerfile --build-arg PUBLIC_API_URL=$PUBLIC_API_URL -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
+        docker build -f Dockerfile \
+          --build-arg PUBLIC_API_URL=$PUBLIC_API_URL \
+          --build-arg LOGIN_JUMPSELLER_API=${{ secrets.LOGIN_JUMPSELLER_API }} \
+          --build-arg TOKEN_JUMPSELLER_API=${{ secrets.TOKEN_JUMPSELLER_API }} \
+          -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
         docker push returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }}
 
     - name: Setup Terraform
