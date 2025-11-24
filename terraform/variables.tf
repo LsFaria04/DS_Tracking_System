@@ -76,8 +76,45 @@ variable "blockchain_private_key" {
   sensitive   = true
 }
 
+
 variable "blockchain_contract_address" {
   description = "Deployed smart contract address on Sepolia testnet (leave empty if not yet deployed)"
   type        = string
   default     = "0xCB0B5282057FCf183dE89CF3115a01a02e82eB61"
+}
+
+variable "jumpseller_base_url" {
+  description = "Base URL for Jumpseller API"
+  type        = string
+  default     = "https://api.jumpseller.com/v1"
+}
+
+variable "login_jumpseller_api" {
+  description = "Login credential for Jumpseller API"
+  type        = string
+  sensitive   = true
+}
+
+variable "token_jumpseller_api" {
+  description = "Token credential for Jumpseller API"
+  type        = string
+  sensitive   = true
+}
+
+variable "jumpseller_base_url" {
+  description = "Base URL for Jumpseller API"
+  type        = string
+  default     = "https://api.jumpseller.com/v1"
+}
+
+variable "login_jumpseller_api" {
+  description = "Login credential for Jumpseller API"
+  type        = string
+  sensitive   = true
+}
+
+variable "token_jumpseller_api" {
+  description = "Token credential for Jumpseller API"
+  type        = string
+  sensitive   = true
 }

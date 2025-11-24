@@ -95,6 +95,34 @@ resource "google_cloud_run_v2_service" "default" {
         value = var.project_id
       }
 
+      # Jumpseller API Credentials
+      env {
+        name  = "JUMPSELLER_BASE_URL"
+        value = var.jumpseller_base_url
+      }
+      env {
+        name  = "LOGIN_JUMPSELLER_API"
+        value = var.login_jumpseller_api
+      }
+      env {
+        name  = "TOKEN_JUMPSELLER_API"
+        value = var.token_jumpseller_api
+      }
+
+      # Jumpseller Configuration  
+      env {
+        name  = "JUMPSELLER_BASE_URL"
+        value = var.jumpseller_base_url
+      }
+      env {
+        name  = "LOGIN_JUMPSELLER_API"
+        value = var.login_jumpseller_api
+      }
+      env {
+        name  = "TOKEN_JUMPSELLER_API"
+        value = var.token_jumpseller_api
+      }
+
       # Resource limits
       resources {
         limits = {

@@ -100,15 +100,8 @@ jobs:
       working-directory: mips_order_tracking
       env:
         PUBLIC_API_URL: https://tracking-status-138871440259.europe-west1.run.app
-        JUMPSELLER_BASE_URL: https://api.jumpseller.com/v1
-        LOGIN_JUMPSELLER_API: ${{ secrets.LOGIN_JUMPSELLER_API }}
-        TOKEN_JUMPSELLER_API: ${{ secrets.TOKEN_JUMPSELLER_API }}
       run: |
-        docker build -f Dockerfile \
-          --build-arg PUBLIC_API_URL=$PUBLIC_API_URL \
-          --build-arg LOGIN_JUMPSELLER_API=${{ secrets.LOGIN_JUMPSELLER_API }} \
-          --build-arg TOKEN_JUMPSELLER_API=${{ secrets.TOKEN_JUMPSELLER_API }} \
-          -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
+        docker build -f Dockerfile --build-arg PUBLIC_API_URL=$PUBLIC_API_URL -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
         docker push returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }}
 
     - name: Setup Terraform
@@ -130,6 +123,8 @@ jobs:
         TF_VAR_blockchain_rpc_url: ${{ secrets.BLOCKCHAIN_RPC_URL }}
         TF_VAR_blockchain_private_key: ${{ secrets.BLOCKCHAIN_PRIVATE_KEY }}
         TF_VAR_blockchain_contract_address: ${{ secrets.BLOCKCHAIN_CONTRACT_ADDRESS }}
+        TF_VAR_login_jumpseller_api: ${{ secrets.LOGIN_JUMPSELLER_API }}
+        TF_VAR_token_jumpseller_api: ${{ secrets.TOKEN_JUMPSELLER_API }}
       run: |
         terraform init
         
