@@ -116,7 +116,7 @@ terraform init
 
 ### Get MetaMask Private Key
 
-**⚠️ SECURITY WARNING**: Never commit your private key to version control!
+**SECURITY WARNING**: Never commit your private key
 
 1. Open MetaMask browser extension
 2. Click the 3 dots menu on your account
@@ -135,7 +135,7 @@ docker build -f Dockerfile -t <yourname>/tracking-status:<tag> .
 docker push <yourname>/tracking-status:<tag>
 
 # Build and push Docker image frontend 
-cd ../frontend
+cd ../mips_order_tracking
 docker build -f Dockerfile -t <yourname>/tracking-status-frontend:<tag> .
 docker push <yourname>/tracking-status-frontend:<tag>
 
