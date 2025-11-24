@@ -4,6 +4,7 @@ import (
 	"app/blockchain"
 	"app/models"
 	"app/requestModels"
+	"app/utils"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -60,7 +61,10 @@ func (h *OrderHandler) AddOrder(c *gin.Context) {
 	order.Tracking_Code = trackingCode
 	order.Customer_ID = input.CustomerId
 	order.Delivery_Address = input.DeliveryAddress
-	order.Delivery_Estimate = time.Now().Add(48 * time.Hour) //just a mock estimate for now
+
+	estimate_time := utils.EstimateDeliveryTime(input.SellerLatitude, input.SellerLongitude, input.DeliveryLatitude, input.DeliveryLongitude, 30)
+	order.Delivery_Estimate = time.Now().Add(time.Duration(estimate_time * float64(time.Hour)))
+
 	order.Delivery_Latitude = input.DeliveryLatitude
 	order.Delivery_Longitude = input.DeliveryLongitude
 	order.Seller_Address = input.SellerAddress
@@ -170,4 +174,68 @@ func (h *OrderHandler) AddOrder(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Update stored successfully"})
 
+}
+
+func (h *OrderHandler) UpdateOrder(c *gin.Context){
+
+	//get the order update request
+	var input requestModels.UpdateOrderRequest
+	if err := c.ShouldBindJSON(&input); err != nil {
+
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Input"})
+		return
+	}
+
+	var order *models.Orders
+	result := h.DB.First(&order,input.OrderID)
+	//check if there was an error with the database request
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			message := fmt.Sprintf("Order with id %d not found", input.OrderID)
+			c.JSON(http.StatusNotFound, gin.H{"error": message})
+			return
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+	}
+
+	var order_update *models.OrderStatusHistory
+	result = h.DB.Where("order_id = ?", order.Id).Order("timestamp_history desc").First(&order_update)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			//no need to through an error
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+			}
+	}
+
+	if (order_update != nil) && ((order_update.Order_Status != "PROCESSING")){
+		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot change an order that is already shipped"})
+		return
+	}
+
+	order.Delivery_Address = input.DeliveryAddress
+	order.Delivery_Latitude = input.DeliveryLatitude
+	order.Delivery_Longitude = input.DeliveryLongitude
+	estimate_time := utils.EstimateDeliveryTime(order.Seller_Latitude, order.Seller_Longitude, order.Delivery_Latitude, order.Delivery_Longitude, 30)
+	order.Delivery_Estimate = time.Now().Add(time.Duration(estimate_time * float64(time.Hour)))
+
+
+	result = h.DB.Save(&order)
+
+	//check if there was an error with the database request
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			message := fmt.Sprintf("Order with id %d could not be updated", input.OrderID)
+			c.JSON(http.StatusNotFound, gin.H{"error": message})
+			return
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Order Updated successfully"})
 }

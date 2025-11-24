@@ -4,6 +4,8 @@ import type { BackendOrder, BackendOrderProduct, BackendOrderStatus, OrderData, 
 import type { CarbonFootprintData } from "../utils/carbonFootprint";
 import { calculateCarbonFootprint } from "../utils/carbonFootprint";
 import CarbonFootprint from "../components/CarbonFootprint";
+import UpdateModal from "../components/UpdateModal";
+import getCoordinatesFromAddress from "../utils/address_coordinates";
 
 const OrderMap = lazy(() => import('../components/OrderMap'));
 
@@ -16,6 +18,12 @@ export default function OrderPage() {
     const [verifying, setVerifying] = useState(false);
     const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
     const [carbonFootprint, setCarbonFootprint] = useState<CarbonFootprintData | null>(null);
+    const [showUpdateModal, setUpdateModal] = useState(false);
+    const [address, setAddress] = useState("");
+    const [statusMessage, setStatusMessage] = useState<string | null>(null);
+    const [statusType, setStatusType] = useState<"success" | "error" | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+
 
     useEffect(() => {
         const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
@@ -46,6 +54,7 @@ export default function OrderPage() {
                     })) || [],
                     statusHistory: []
                 });
+
             })
             .catch(() => {
                 setError('Failed to load order. Please try again.');
@@ -147,6 +156,77 @@ export default function OrderPage() {
         }
     };
 
+    const handleOrderUpdate = async () => {
+        setIsUpdating(true);
+        setStatusMessage(null); // reset previous message
+
+        const result = await getCoordinatesFromAddress(address);
+
+        if(!result){
+            setStatusMessage("Invalid Address.");
+            setStatusType("error");
+            setIsUpdating(false);
+            return
+        }
+
+        try {
+            const apiUrl = process.env.PUBLIC_API_URL || "http://localhost:8080";
+            const response = await fetch(`${apiUrl}/order/update`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+                {
+                    order_id: Number(id),
+                    delivery_address: address,
+                    delivery_latitude: Number(result?.lat),
+                    delivery_longitude: Number(result?.lon),
+                }
+            ),
+            });
+
+            if (!response.ok) {
+                if(response.status == 403){
+                    setStatusMessage("Update failed. Cannot change an order that is already shipped.");
+                }
+                else{
+                    setStatusMessage("Update failed. Please try again.");
+                }
+                setStatusType("error");
+                setIsUpdating(false);
+            return;
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+                setStatusMessage("Update failed.");
+                setStatusType("error");
+
+            } else {
+                setStatusMessage("Order updated successfully!");
+                setStatusType("success");
+
+                setOrder((prev) =>
+                    prev
+                    ? {
+                        ...prev,
+                        delivery_address: address,
+                        delivery_latitude: Number(result?.lat),
+                        delivery_longitude: Number(result?.lon),
+                        }
+                    : prev
+                );
+                
+            }
+        } catch (error) {
+            setStatusMessage("Network error. Please try again.");
+            setStatusType("error");
+        }
+
+        setIsUpdating(false);
+    };
+
+
 
 
     if (loading) return (
@@ -235,6 +315,7 @@ export default function OrderPage() {
         </div>
     );
 
+
     return (
         <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
             {/* Map */}
@@ -270,7 +351,7 @@ export default function OrderPage() {
             {/* Header */}
             <header className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
-                    <div className="flex-1 space-y-4">
+                    <div className="flex-1 space-y-4 ">
                         <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Order {id}</h1>
                         <div className="space-y-2 text-sm">
                             <div className="flex items-center gap-3">
@@ -285,6 +366,7 @@ export default function OrderPage() {
                                 <span className="text-gray-500 dark:text-gray-400 w-28">Delivery To</span>
                                 <span className="text-gray-900 dark:text-white">{order.delivery_address}</span>
                             </div>
+                             
                         </div>
                     </div>
                     <div className="flex flex-col items-start md:items-end gap-4 min-w-[200px]">
@@ -297,12 +379,24 @@ export default function OrderPage() {
                             <p className="text-3xl font-semibold text-gray-900 dark:text-white">{order.price}€</p>
                         </div>
                         
+                        
+                    </div>
+                    
+                </div>
+                <div className="flex justify-between gap-4 mt-6">
+                                                <button
+                                onClick={() => setUpdateModal(true)}
+                                disabled={showUpdateModal}
+                                className="min-w-[200px] mt-4 px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    Update Order
+                        </button>
                         {/* Blockchain Verification */}
-                        <div className="w-full pt-4 border-t border-gray-200 dark:border-gray-800">
+                        <div className="min-w-[200px] max-w-20 pt-4 border-t border-gray-200 dark:border-gray-800">
                             <button
                                 onClick={handleVerifyBlockchain}
                                 disabled={verifying}
-                                className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {verifying ? (
                                     <>
@@ -350,9 +444,33 @@ export default function OrderPage() {
                                 </div>
                             )}
                         </div>
-                    </div>
                 </div>
             </header>
+
+            {/*Modal for to update the order information*/ }
+            <UpdateModal show={showUpdateModal} onClose={() => setUpdateModal(false)} isUpdating={isUpdating} onUpdate={handleOrderUpdate}>
+                 <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Update Delivery Address</h2>
+                   {/* Feedback message injected as children */}
+                    {statusMessage && (
+                        <div
+                        className={`mb-4 p-3 rounded-lg text-sm ${
+                            statusType === "success"
+                            ? "bg-green-50 text-green-700 border border-green-200"
+                            : "bg-red-50 text-red-700 border border-red-200"
+                        }`}
+                        >
+                        {statusMessage}
+                        </div>
+                    )}
+                    {/* Text box for delivery address */}
+                    <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter new delivery address"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                    />
+            </UpdateModal>
 
             {/* Products */}
             <section>
