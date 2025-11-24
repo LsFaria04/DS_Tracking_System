@@ -100,21 +100,3 @@ variable "token_jumpseller_api" {
   type        = string
   sensitive   = true
 }
-
-variable "jumpseller_base_url" {
-  description = "Base URL for Jumpseller API"
-  type        = string
-  default     = "https://api.jumpseller.com/v1"
-}
-
-variable "login_jumpseller_api" {
-  description = "Login credential for Jumpseller API"
-  type        = string
-  sensitive   = true
-}
-
-variable "token_jumpseller_api" {
-  description = "Token credential for Jumpseller API"
-  type        = string
-  sensitive   = true
-}
