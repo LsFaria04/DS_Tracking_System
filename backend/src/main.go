@@ -75,68 +75,31 @@ func configRouter(db *gorm.DB) (*gin.Engine, error) {
 	return router, nil
 }
 
-// Test PubSub emulator connection
+// Test PubSub emulator connection to mock_courier
 func testPubSub() error {
-
-	pubsubEmulatorHost := os.Getenv("PUBSUB_EMULATOR_HOST")
-	if pubsubEmulatorHost == "" {
-		log.Println("PUBSUB_EMULATOR_HOST not set, skipping PubSub test")
-		return nil
-	}
-
-	log.Printf("Testing PubSub emulator at: %s", pubsubEmulatorHost)
 
 	ctx := context.Background()
 
-	// Use the project ID from environment or default to "madeinportugal"
-	projectID := os.Getenv("PUBSUB_PROJECT")
-	if projectID == "" {
-		projectID = "madeinportugal"
-	}
+    projectID := os.Getenv("PUBSUB_PROJECT")
+    subscriptionID := "orders_status-sub" 
 
-	// Create PubSub client
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return fmt.Errorf("failed to create pubsub client: %v", err)
-	}
-	defer client.Close()
+    client, err := pubsub.NewClient(ctx, projectID)
+    if err != nil {
+        log.Fatalf("Failed to create Pub/Sub client: %v", err)
+    }
+    defer client.Close()
 
-	// Test publishing to "orders" topic
-	topic := client.Topic("orders")
-	defer topic.Stop()
+    sub := client.Subscription(subscriptionID)
 
-	// Check if topic exists, if not create it
-	exists, err := topic.Exists(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to check if topic exists: %v", err)
-	}
+    fmt.Println("Listening for messages...")
 
-	if !exists {
-		log.Println("Topic 'orders' does not exist, creating...")
-		topic, err = client.CreateTopic(ctx, "orders")
-		if err != nil {
-			return fmt.Errorf("failed to create topic: %v", err)
-		}
-	}
-
-	// Publish a test message
-	testMessage := fmt.Sprintf("Test message from backend - %s", time.Now().Format(time.RFC3339))
-	result := topic.Publish(ctx, &pubsub.Message{
-		Data: []byte(testMessage),
-		Attributes: map[string]string{
-			"source": "tracking-status",
-			"type":   "health-check",
-		},
-	})
-
-	// Block until the message is published
-	msgID, err := result.Get(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to publish message: %v", err)
-	}
-
-	log.Printf("PubSub test successful! Message ID: %s", msgID)
-	log.Printf("Published message: %s", testMessage)
+	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+        fmt.Printf("Received message: %s\n", string(m.Data))
+        m.Ack() // acknowledge the message so it's not redelivered
+    })
+    if err != nil {
+        log.Fatalf("Failed to receive messages: %v", err)
+    }
 
 	return nil
 }
@@ -151,7 +114,7 @@ func main() {
 
 	// Test PubSub emulator if in development mode
 	if err := testPubSub(); err != nil {
-		log.Printf("⚠️  PubSub test failed: %v", err)
+		log.Printf(" PubSub test failed: %v", err)
 		log.Println("Continuing without PubSub...")
 	}
 
