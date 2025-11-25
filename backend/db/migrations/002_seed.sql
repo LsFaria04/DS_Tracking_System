@@ -1,0 +1,57 @@
+-- Insert storage locations with real GPS coordinates
+INSERT INTO storages (name, address, latitude, longitude) VALUES
+('Main Warehouse Lisboa', 'Av. da Liberdade, 1250-096 Lisboa, Portugal', 38.7223, -9.1393),
+('Distribution Center Porto', 'Rua de Santa Catarina, 4000-442 Porto, Portugal', 41.1496, -8.6109),
+('Regional Hub Coimbra', 'Praça da República, 3000-343 Coimbra, Portugal', 40.2033, -8.4103),
+('Logistics Center Faro', 'Av. da República, 8000-078 Faro, Portugal', 37.0194, -7.9304),
+('Distribution Hub Braga', 'Praça da República, 4710-305 Braga, Portugal', 41.5454, -8.4265),
+('Regional Center Évora', 'Praça do Giraldo, 7000-508 Évora, Portugal', 38.5714, -7.9087),
+('Logistics Hub Aveiro', 'Av. Dr. Lourenço Peixinho, 3800-167 Aveiro, Portugal', 40.6443, -8.6455),
+('Distribution Center Setúbal', 'Av. Luísa Todi, 2900-456 Setúbal, Portugal', 38.5244, -8.8882),
+('Regional Hub Viseu', 'Rua Formosa, 3500-161 Viseu, Portugal', 40.6566, -7.9122),
+('Madeira Hub Funchal', 'Av. Arriaga, 9000-060 Funchal, Madeira', 32.6669, -16.9241),
+('Açores Hub Ponta Delgada', 'Av. Infante Dom Henrique, 9500-150 Ponta Delgada, Açores', 37.7412, -25.6756),
+('Lisbon Airport (Cargo)', 'Aeroporto Humberto Delgado, 1700-111 Lisboa, Portugal', 38.7742, -9.1342),
+('Porto Airport (Cargo)', 'Aeroporto Francisco Sá Carneiro, 4470-558 Maia, Portugal', 41.2481, -8.6814),
+('Funchal Airport (Cargo)', 'Aeroporto da Madeira, 9100-105 Santa Cruz, Madeira', 32.6979, -16.7745),
+('Ponta Delgada Airport (Cargo)', 'Aeroporto João Paulo II, 9500-749 Ponta Delgada, Açores', 37.7412, -25.6980),
+('Faro Airport (Cargo)', 'Aeroporto Gago Coutinho, 8006-901 Faro, Portugal', 37.0142, -7.9659),
+('Beja Airport (Cargo)', 'Aeroporto de Beja, EM528-2, 7800-745 Beja, Portugal', 38.0775, -7.9317);
+
+-- Insert sample orders
+INSERT INTO orders (customer_id, seller_id, seller_address, seller_latitude, seller_longitude, tracking_code, delivery_estimate, delivery_address, delivery_latitude, delivery_longitude)
+VALUES
+  -- Order 1: Seller near Lisboa (Almada) -> Main Warehouse Lisboa -> Delivery in Lisboa (Parque das Nações)
+  (101, 501, 'Dona Lurdes, Rua Dom Afonso Henriques 12, 2800-012 Almada, Portugal', 38.6780, -9.1580, 'TRACK001', CURRENT_DATE + INTERVAL '5 days', 'Rua Padre Joaquim Alves Correia 5, 1990-152 Lisboa, Portugal', 38.7680, -9.1000),
+  
+  -- Order 2: Seller near Porto (Matosinhos) -> Distribution Center Porto -> Delivery in Coimbra (Santa Clara)
+  (102, 502, 'Dona Maria, Rua Brito Capelo 100, 4450-073 Matosinhos, Portugal', 41.1830, -8.6890, 'TRACK002', CURRENT_DATE + INTERVAL '3 days', 'Rua António José de Almeida 20, 3040-072 Coimbra, Portugal', 40.1970, -8.4450),
+
+  -- Order 3: Seller near Faro (Olhão) -> Logistics Center Faro -> Delivery in Coimbra (Cernache)
+  (103, 503, 'Dona Alzira, Rua do Comércio 22, 8700-343 Olhão, Portugal', 37.0270, -7.8410, 'TRACK003', CURRENT_DATE + INTERVAL '7 days', 'Rua Principal 8, 3020-901 Cernache, Coimbra, Portugal', 40.2360, -8.5120),
+  
+  -- Order 4: Seller near Lisboa (Montijo) -> Main Warehouse -> Madeira Hub (delivery in Funchal, outskirts)
+  (104, 501, 'Dona Lurdes, Rua dos Pescadores 45, 2870-108 Montijo, Portugal', 38.7060, -8.9730, 'TRACK004', CURRENT_DATE + INTERVAL '10 days', 'Estrada Monumental 390, 9000-250 Funchal, Madeira', 32.6500, -16.9300),
+  
+  -- Order 5: Seller near Porto (Vila Nova de Gaia) -> Distribution Center Porto -> Açores Hub (delivery in Ponta Delgada, outskirts)
+  (105, 502, 'Dona Maria, Avenida da República 1200, 4430-192 Vila Nova de Gaia, Portugal', 41.1230, -8.6100, 'TRACK005', CURRENT_DATE + INTERVAL '12 days', 'Rua do Loreto 15, 9500-418 Ponta Delgada, Açores', 37.7500, -25.6700),
+
+  -- Order 6: Seller near Évora (Vila Viçosa) -> Regional Center Évora -> Delivery in Viseu (Centro)
+  (106, 504, 'Dona Beatriz, Largo do Conde 8, 7160-251 Vila Viçosa, Portugal', 38.7830, -7.4160, 'TRACK006', CURRENT_DATE + INTERVAL '8 days', 'Rua Formosa 120, 3500-161 Viseu, Portugal', 40.6566, -7.9122);
+
+-- Note: order_status_history will be populated via API calls to record blockchain hashes
+
+-- Insert products for each order
+INSERT INTO order_products (order_id, product_id, quantity, product_name_at_purchase, product_price_at_purchase)
+VALUES
+  (1, 32586490, 2, 'Handcrafted Cork Wallet',  24.99),
+  (1, 32586503, 1, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
+  (2, 32586505, 3, 'Artisan Olive Wood Cutting Board', 38.75),
+  (3, 32586512, 1, 'Hand-painted Azulejo Coaster Set', 19.99),
+  (3, 32586516, 2, 'Traditional Filigree Silver Earrings', 67.00),
+  (4, 32586490, 1,  'Handcrafted Cork Wallet',  24.99),
+  (4, 32586516, 3, 'Traditional Filigree Silver Earrings', 67.00),
+  (5, 32586503, 1, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
+  (5, 32586512, 2, 'Hand-painted Azulejo Coaster Set', 19.99),
+  (6, 32586490, 1, 'Handcrafted Cork Wallet',  24.99),
+  (6, 32586505, 2, 'Artisan Olive Wood Cutting Board', 38.75);

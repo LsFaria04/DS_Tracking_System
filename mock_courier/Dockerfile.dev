@@ -1,18 +1,12 @@
-FROM golang:1.25.3
+FROM golang:1.25.3 AS builder
 
 WORKDIR /app
-
-# Install Air
-RUN go install github.com/air-verse/air@latest
-
-# Copy go.mod/go.sum first for caching
 COPY go.* ./
-
-# Download all dependencies
 RUN go mod download
-
-# Copy source
 COPY . .
+RUN go build -o mock_courier .
 
-# Run Air (hot reload)
-CMD ["air"]
+FROM gcr.io/distroless/base-debian12
+WORKDIR /app
+COPY --from=builder /app/mock_courier .
+CMD ["./mock_courier"]

@@ -36,33 +36,57 @@ func main() {
         log.Fatalf("Failed to check if topic exists: %v", err)
     }
     if !exists {
-        log.Fatalf("Topic %s does not exist", topicName)
+        if _, err := client.CreateTopic(ctx, topicName); err != nil {
+            log.Fatalf("Failed to create topic: %v", err)
+        }
+        topic = client.Topic(topicName)
     }
+    defer topic.Stop()
 
     status := []string{"PROCESSING", "SHIPPED", "IN TRANSIT"}
     notes := []string{"Order received from seller", "Picked up from seller by courier", "Package ready for delivery"}
     locations := []string{"Dona Lurdes", "Main Warehouse Lisboa", "Main Warehouse Lisboa"}
-    storageIds := []string{"null", "1", "1"}
+    storageIds := []int{0, 1, 1}
 
-    time.Sleep(15 * time.Second)
+    time.Sleep(20 * time.Second)
     for i := 0; i < 3; i++ {
-        time.Sleep(5 * time.Second) 
+        time.Sleep(7 * time.Second)
 
-        msgData := fmt.Sprintf(`{
-            "order_id": "1",
-            "status": "%s",
-            "note": "%s",
-            "location": "%s",
-            "storage_id": "%s"
-        }`, status[i], notes[i], locations[i], storageIds[i])
+        var res *pubsub.PublishResult
 
-        res := topic.Publish(ctx, &pubsub.Message{
-            Data: []byte(msgData),
-            Attributes: map[string]string{
-                "source": "mock_courier",
-                "type":   "order-update",
-            },
-        })
+        if storageIds[i] != 0 {
+
+            msgData := fmt.Sprintf(`{
+                "order_id": 1,
+                "order_status": "%s",          
+                "note": "%s",
+                "order_location": "%s",        
+                "storage_id": %d
+            }`, status[i], notes[i], locations[i], storageIds[i])
+
+            res = topic.Publish(ctx, &pubsub.Message{
+                Data: []byte(msgData),
+                Attributes: map[string]string{
+                    "source": "mock_courier",
+                    "type":   "order-update",
+                },
+            })
+        } else {
+            msgData := fmt.Sprintf(`{
+                "order_id": 1,
+                "order_status": "%s",          
+                "note": "%s",
+                "order_location": "%s"        
+            }`, status[i], notes[i], locations[i])
+
+            res = topic.Publish(ctx, &pubsub.Message{
+                Data: []byte(msgData),
+                Attributes: map[string]string{
+                    "source": "mock_courier",
+                    "type":   "order-update",
+                },
+            })
+        }
 
         id, err := res.Get(ctx)
         if err != nil {

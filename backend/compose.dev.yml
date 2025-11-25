@@ -96,8 +96,8 @@ services:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       PUBSUB_PROJECT: madeinportugal
     depends_on:
-      - app
       - pubsub-emulator
+      - app
 
 volumes:
   postgres_data:
