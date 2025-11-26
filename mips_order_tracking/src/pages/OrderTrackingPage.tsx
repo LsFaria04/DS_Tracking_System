@@ -442,12 +442,12 @@ export default function OrderPage() {
                                                 {verificationResult.verified_updates}/{verificationResult.total_updates} updates verified
                                             </p>
                                             {verificationResult.contract_address && (
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 wrap-break-word">
                                                     <span className="font-medium">Contract:</span> {verificationResult.contract_address}
                                                 </p>
                                             )}
                                             {verificationResult.transaction_hashes && verificationResult.transaction_hashes.length > 0 && (
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 ">
                                                     <span className="font-medium">✓</span> Blockchain links shown in tracking history below
                                                 </p>
                                             )}

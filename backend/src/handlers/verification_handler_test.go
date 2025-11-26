@@ -15,31 +15,10 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 // setupMockDB creates a gorm DB backed by sqlmock
 
-// Helpers
-func setupMockDB(t *testing.T) (*gorm.DB, sqlmock.Sqlmock) {
-	t.Helper()
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	gdb, err := gorm.Open(postgres.New(postgres.Config{Conn: db}), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open gorm with sqlmock: %v", err)
-	}
-	return gdb, mock
-}
-
-func performRequest(r *gin.Engine, req *http.Request) *httptest.ResponseRecorder {
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	return w
-}
 
 // Tests
 func TestVerifyOrder_NoBlockchain(t *testing.T) {
