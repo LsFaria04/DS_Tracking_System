@@ -6,6 +6,7 @@ import AppLayout from './AppLayout'
 import './index.css'
 import HomePage from './pages/HomePage'
 import OrderDetailPage from './pages/OrderTrackingPage'
+import OrdersPage from './pages/OrdersPage'
 
 const router = createBrowserRouter([
     {
@@ -15,6 +16,10 @@ const router = createBrowserRouter([
             {
                 path: '/',
                 element: <HomePage />,
+            },
+            {
+                path: '/orders',
+                element: <OrdersPage />,
             },
             {
                 path: '/order/:id',

@@ -26,6 +26,7 @@ interface OrderStatus {
 }
 
 interface OrderData {
+    id?: number;
     tracking_code: string;
     delivery_estimate: string;
     delivery_address: string;
@@ -59,6 +60,7 @@ interface BackendStorage {
 }
 
 interface BackendOrder {
+    Id?: number;
     Tracking_Code: string;
     Delivery_Estimate: string;
     Delivery_Address: string;
