@@ -73,10 +73,17 @@ func (h *OrderStatusHistoryHandler) AddOrderUpdate(c *gin.Context) {
 		hash := sha256.Sum256([]byte(data))
 
 		//store the hash in the blockchain
-		if err := StoreUpdateHash(auth, contract, uint64(input.Order_ID), hash); err != nil {
+		txHash, err := StoreUpdateHash(auth, contract, uint64(input.Order_ID), hash)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save update"})
 			return
 		}
+		// Log the transaction hash for debugging
+		if txHash != "" {
+			fmt.Printf("Blockchain transaction hash: %s\n", txHash)
+		}
+
+		input.Blockchain_Transaction = txHash
 	}
 
 	//store the update into the database

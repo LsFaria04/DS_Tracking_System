@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -18,6 +19,10 @@ import (
 type VerificationHandler struct {
 	DB     *gorm.DB
 	Client *blockchain.Client
+	// Test hooks - if set, used instead of fetching data directly from blockchain
+	GetContractInstanceFunc func(client *ethclient.Client, contractAddress string) (*blockchain.Blockchain, error)
+	GetUpdateHashesFunc     func(contract *blockchain.Blockchain, orderID *big.Int) ([][32]byte, error)
+	GetTxHashesFunc         func(ethClient *ethclient.Client, contract *blockchain.Blockchain, orderID *big.Int) ([]string, error)
 }
 
 // VerifyOrder verifies all updates for an order against blockchain
@@ -47,7 +52,13 @@ func (h *VerificationHandler) VerifyOrder(c *gin.Context) {
 	// Get blockchain contract instance
 	ethClient := h.Client.EthClient
 	addr := os.Getenv("BLOCKCHAIN_CONTRACT_ADDRESS")
-	contract, err := blockchain.GetContractInstance(ethClient, addr)
+	var contract *blockchain.Blockchain
+	var err error
+	if h.GetContractInstanceFunc != nil {
+		contract, err = h.GetContractInstanceFunc(ethClient, addr)
+	} else {
+		contract, err = blockchain.GetContractInstance(ethClient, addr)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to blockchain"})
 		return
@@ -56,16 +67,29 @@ func (h *VerificationHandler) VerifyOrder(c *gin.Context) {
 	// Get all hashes from blockchain for this order
 	orderIDBigInt := new(big.Int)
 	orderIDBigInt.SetString(orderID, 10)
-	blockchainHashes, err := contract.GetUpdateHash(nil, orderIDBigInt)
+	var blockchainHashes [][32]byte
+	if h.GetUpdateHashesFunc != nil {
+		blockchainHashes, err = h.GetUpdateHashesFunc(contract, orderIDBigInt)
+	} else {
+		blockchainHashes, err = contract.GetUpdateHash(nil, orderIDBigInt)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve blockchain hashes"})
 		return
 	}
 
 	response := requestModels.VerificationResponse{
-		TotalUpdates:     len(orderHistory),
-		BlockchainHashes: len(blockchainHashes),
-		Mismatches:       []string{},
+		TotalUpdates:      len(orderHistory),
+		BlockchainHashes:  len(blockchainHashes),
+		Mismatches:        []string{},
+		TransactionHashes: []string{},
+		ContractAddress:   addr,
+	}
+
+
+	//Insert the transaction hashed in the response
+	for _, update := range orderHistory{
+		response.TransactionHashes = append(response.TransactionHashes, update.Blockchain_Transaction)
 	}
 
 	// Verify each update
