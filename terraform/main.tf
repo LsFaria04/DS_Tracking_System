@@ -168,13 +168,14 @@ resource "google_cloud_run_v2_service" "frontend" {
   template {
     containers {
       image = var.frontend_docker_image
-    
+      env {
+        name  = "PUBLIC_TOMTOM_API_KEY"
+        value = var.public_tomtom_api_key
+      }
       ports {
         container_port = 80
       }
     }
-
-
   }
   
 }
