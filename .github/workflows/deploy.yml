@@ -125,7 +125,7 @@ jobs:
         TF_VAR_blockchain_contract_address: ${{ secrets.BLOCKCHAIN_CONTRACT_ADDRESS }}
         TF_VAR_login_jumpseller_api: ${{ secrets.LOGIN_JUMPSELLER_API }}
         TF_VAR_token_jumpseller_api: ${{ secrets.TOKEN_JUMPSELLER_API }}
-        TF_VAR_tomtom_api_key: ${{ secrets.TOMTOM_API_KEY }}
+        TF_VAR_public_tomtom_api_key: ${{ secrets.TOMTOM_API_KEY }}
       run: |
         terraform init
         
