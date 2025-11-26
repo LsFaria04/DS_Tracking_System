@@ -91,6 +91,8 @@ interface VerificationResult {
     status: string;
     message: string;
     mismatches?: string[];
+    transaction_hashes?: string[];
+    contract_address?: string;
 }
 
 export type {OrderData, OrderProduct, OrderStatus, Storage, VerificationResult, BackendOrderStatus, BackendOrder, BackendStorage, BackendOrderProduct}
