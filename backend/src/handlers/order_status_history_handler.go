@@ -82,6 +82,8 @@ func (h *OrderStatusHistoryHandler) AddOrderUpdate(c *gin.Context) {
 		if txHash != "" {
 			fmt.Printf("Blockchain transaction hash: %s\n", txHash)
 		}
+
+		input.Blockchain_Transaction = txHash
 	}
 
 	//store the update into the database

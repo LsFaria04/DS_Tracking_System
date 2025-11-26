@@ -161,6 +161,8 @@ func (h *OrderHandler) AddOrder(c *gin.Context) {
 		if txHash != "" {
 			fmt.Printf("Blockchain transaction hash: %s\n", txHash)
 		}
+
+		statusHistory.Blockchain_Transaction = txHash
 	}
 
 	//store the update into the database

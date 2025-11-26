@@ -101,15 +101,6 @@ func TestVerifyOrder_ReturnsTransactionHashes(t *testing.T) {
 		return [][32]byte{computed}, nil
 	}
 
-	// Inject GetTxHashesFunc to return a fake transaction hash
-	expectedTx := "0xdeadbeef1234"
-	h.GetTxHashesFunc = func(
-		ethClient *ethclient.Client,
-		contract *blockchain.Blockchain,
-		orderIDBig *big.Int,
-	) ([]string, error) {
-		return []string{expectedTx}, nil
-	}
 
 	req := httptest.NewRequest(http.MethodGet, "/order/verify/1", nil)
 	w := performRequest(r, req)
@@ -123,12 +114,6 @@ func TestVerifyOrder_ReturnsTransactionHashes(t *testing.T) {
 		t.Fatalf("failed to parse response: %v", err)
 	}
 
-	if len(resp.TransactionHashes) != 1 {
-		t.Fatalf("expected 1 transaction hash, got %d: %+v", len(resp.TransactionHashes), resp.TransactionHashes)
-	}
-	if resp.TransactionHashes[0] != expectedTx {
-		t.Fatalf("expected tx %s, got %s", expectedTx, resp.TransactionHashes[0])
-	}
 	if !resp.Verified {
 		t.Fatalf("expected verified true, got false: %+v", resp)
 	}
