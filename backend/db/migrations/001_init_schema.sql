@@ -42,6 +42,7 @@ CREATE TABLE order_status_history (
     order_status order_state NOT NULL ,
     timestamp_history TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     note TEXT,
+    blockchain_transaction TEXT NOT NULL,
     order_location TEXT NOT NULL,
     storage_id INTEGER REFERENCES storages(id) ON DELETE SET NULL
 );
