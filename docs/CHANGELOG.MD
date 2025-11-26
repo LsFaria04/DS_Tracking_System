@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## Sprint 2
+//TODO
+
 ## Sprint 1
 
 In this sprint, we implemented most of the core functionalities of the order tracking system.
