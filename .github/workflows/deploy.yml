@@ -112,7 +112,7 @@ jobs:
         chmod +x terraform
         sudo mv terraform /usr/local/bin/terraform
         terraform --version
-
+ 
     - name: Deploy with Terraform
       working-directory: terraform
       env:
