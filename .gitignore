@@ -40,4 +40,4 @@ coverage/
 # Environment variables
 .env
 .env.local
-.env.*.local
+.env.*.local.github/copilot-instructions.md
