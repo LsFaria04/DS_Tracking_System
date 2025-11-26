@@ -1,5 +1,6 @@
 variable "public_tomtom_api_key" {
   description = "TomTom API Key for frontend"
+  type       = string
 }
 variable "project_id" {
   description = "The Google Cloud project ID."
