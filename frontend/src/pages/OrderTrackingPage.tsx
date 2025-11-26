@@ -429,10 +429,9 @@ export default function OrderPage() {
                             };
                             
                             // Get the blockchain transaction hash for this status update
-                            // Order history is DESC (newest first), but blockchain hashes are ASC (oldest first)
-                            // So we need to reverse the index
-                            const reversedIdx = orderHistory.length - 1 - idx;
-                            const txHash = verificationResult?.transaction_hashes?.[reversedIdx];
+                            // Transaction hashes align with the order returned by the verification API
+                            // (same index as the orderHistory entries shown), so use the same index
+                            const txHash = verificationResult?.transaction_hashes?.[idx];
                             
                             return (
                                 <li key={idx} className="relative flex">
