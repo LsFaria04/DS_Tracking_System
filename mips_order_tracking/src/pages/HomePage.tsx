@@ -18,6 +18,10 @@ export default function Home() {
         navigate("/order/1");
     };
 
+    const handleViewOrders = () => {
+        navigate('/orders');
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
             <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
@@ -27,12 +31,20 @@ export default function Home() {
                         <p className="font-bold">Backend Status:</p>
                         <p>{backendStatus}</p>
                     </div>
-                    <button
-                        onClick={handleTrackOrder}
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleTrackOrder}
                         className="ml-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700"
                     >
                         Track Order
                     </button>
+                        <button
+                            onClick={handleViewOrders}
+                            className="ml-2 rounded bg-gray-700 px-4 py-2 text-white hover:bg-gray-800 dark:bg-gray-700"
+                        >
+                            View Orders
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
