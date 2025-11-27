@@ -1,22 +1,26 @@
-services:
-  pubsub-emulator:
-      image: dipjyotimetia/pubsub-emulator:latest
-      container_name: pubsub-emulator
-      environment:
-        - PUBSUB_PROJECT=madeinportugal
-        - PUBSUB_TOPIC=orders,payments,notifications
-        - PUBSUB_SUBSCRIPTION=orders-sub,payments-sub,notifications-sub
-        - PUBSUB_PORT=8085
-        - DASHBOARD_PORT=8084
-      ports:
-        - "8085:8085"  # Pub/Sub emulator
-        - "8084:8084"  # Web dashboard
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8084/api/health"]
-        interval: 10s
-        timeout: 5s
-        retries: 3
+version: "3.9"
 
+services:
+  # Pub/Sub Emulator
+  pubsub-emulator:
+    image: dipjyotimetia/pubsub-emulator:latest
+    container_name: pubsub-emulator
+    environment:
+      - PUBSUB_PROJECT=madeinportugal
+      - PUBSUB_TOPIC=orders_status
+      - PUBSUB_SUBSCRIPTION=orders_status-sub
+      - PUBSUB_PORT=8085
+      - DASHBOARD_PORT=8084
+    ports:
+      - "8085:8085"  # Pub/Sub emulator
+      - "8084:8084"  # Web dashboard
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Postgres Database
   postgres:
     image: postgres:17
     restart: always
@@ -31,6 +35,7 @@ services:
       - ./db/migrations:/docker-entrypoint-initdb.d
       - ./db/seeds/dev_data.sql:/docker-entrypoint-initdb.d/002_seed.sql
 
+  # PgAdmin
   pgadmin:
     image: dpage/pgadmin4:9.9
     environment:
@@ -43,6 +48,7 @@ services:
     depends_on:
       - postgres
   
+  # Backend Application
   app:
     build:
       context: .
@@ -50,22 +56,22 @@ services:
     ports:
       - "8080:8080"
     environment:
-      #Database
+      # Database
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
-      #Blockchain
+      # Blockchain
       BLOCKCHAIN_RPC_URL: ${BLOCKCHAIN_RPC_URL}
       BLOCKCHAIN_PRIVATE_KEY: ${BLOCKCHAIN_PRIVATE_KEY}
       BLOCKCHAIN_CONTRACT_ADDRESS: ${BLOCKCHAIN_CONTRACT_ADDRESS}
       BLOCKCHAIN_NETWORK: ${BLOCKCHAIN_NETWORK}
-      #Jumpseller
+      # Jumpseller
       JUMPSELLER_BASE_URL: ${JUMPSELLER_BASE_URL}
       LOGIN_JUMPSELLER_API: ${LOGIN_JUMPSELLER_API}
       TOKEN_JUMPSELLER_API: ${TOKEN_JUMPSELLER_API}
-      # PubSub Emulator Configuration
+      # PubSub Emulator
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       PUBSUB_PROJECT: madeinportugal
     develop:
@@ -80,6 +86,18 @@ services:
     depends_on: 
       - postgres
       - pubsub-emulator
+
+  # Mock Courier Service
+  mock-courier:
+    build:
+      context: ../mock_courier
+      dockerfile: Dockerfile.dev
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PUBSUB_PROJECT: madeinportugal
+    depends_on:
+      - pubsub-emulator
+      - app
 
 volumes:
   postgres_data:
