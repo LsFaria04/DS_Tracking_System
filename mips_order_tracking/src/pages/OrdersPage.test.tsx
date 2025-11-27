@@ -26,4 +26,16 @@ describe('OrdersPage (microfrontend)', () => {
       expect(screen.getByText('M-Address 1')).toBeTruthy();
     });
   });
+
+  it('shows an error message when the API fails', async () => {
+    global.fetch = vi.fn(() => Promise.reject(new Error('Network fail'))) as unknown as typeof fetch;
+
+    render(
+      <MemoryRouter>
+        <OrdersPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(screen.getByText('Unable to load orders')).toBeTruthy());
+  });
 });
