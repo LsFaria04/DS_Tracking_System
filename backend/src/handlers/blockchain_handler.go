@@ -70,13 +70,13 @@ func (h *BlockchainHandler) DeployContract(c *gin.Context){
 
 }
 
-//stores the hash in the block chain
-func StoreUpdateHash(auth *bind.TransactOpts, contract *blockchain.Blockchain, orderID uint64, hash [32]byte) error {
-    _, err := contract.StoreUpdateHash(auth, big.NewInt(int64(orderID)), hash)
+//stores the hash in the block chain and returns the transaction hash
+func StoreUpdateHash(auth *bind.TransactOpts, contract *blockchain.Blockchain, orderID uint64, hash [32]byte) (string, error) {
+    tx, err := contract.StoreUpdateHash(auth, big.NewInt(int64(orderID)), hash)
     if err != nil {
-        return err
+        return "", err
     }
-    return nil
+    return tx.Hash().Hex(), nil
 }
 
 
