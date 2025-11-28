@@ -72,6 +72,7 @@ interface BackendOrder {
     Created_At: string;
     Price: number;
     Products?: BackendOrderProduct[];
+    Order_Status?:BackendOrderStatus[];
 }
 
 interface BackendOrderStatus {

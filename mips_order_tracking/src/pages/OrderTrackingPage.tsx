@@ -30,7 +30,7 @@ export default function OrderPage() {
         
         fetch(`${apiUrl}/order/${id}`)
             .then(res => {
-                if (!res.ok) throw new Error('Failed to fetch order');
+                if (!res.ok) setError("Could not load the order");
                 return res.json();
             })
             .then(data => {
@@ -63,10 +63,11 @@ export default function OrderPage() {
             
             fetch(`${apiUrl}/order/history/${id}`)
             .then(res => {
-                if (!res.ok) throw new Error('Failed to fetch order history');
+                if (!res.ok) setError("Could not load the order");
                 return res.json();
             })
             .then(data => {
+                
                 const o = data.order_status_history as BackendOrderStatus[];
                 const history: OrderStatus[] = []; 
                 o.forEach((element: BackendOrderStatus) => {
