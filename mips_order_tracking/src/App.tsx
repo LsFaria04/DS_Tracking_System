@@ -1,6 +1,7 @@
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import HomePage from './pages/HomePage';
 import { Routes, Route } from 'react-router-dom';
+import MyNavbar from './components/Navbar';
 
 export default function App() {
   return (

@@ -1,46 +1,194 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import type { OrderData, BackendOrder, BackendOrderProduct, BackendOrderStatus } from '../types';
 
-export default function Home() {
-    const [backendStatus, setBackendStatus] = useState<string>("Checking...");
-    const navigate = useNavigate();
+export default function OrdersPage() {
+    const [orders, setOrders] = useState<OrderData[] | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [order_by, setOrderBy] = useState<string>("newest");
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+
+    const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
 
     useEffect(() => {
-        const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
-        
-        fetch(apiUrl)
-            .then((res) => res.json())
-            .then((data) => setBackendStatus(data.message))
-            .catch(() => setBackendStatus("Backend unreachable"));
-    }, []);
+        setLoading(true);
+        handleOrders();
+    }, [order_by, statusFilter]);
 
-    const handleTrackOrder = () => {
-        navigate("/order/1");
-    };
+    function handleOrders(){
+        fetch(`${apiUrl}/orders?order_by=${order_by}`)
+            .then((res) => {
+                if (!res.ok) setError("Could not load the orders");
+                return res.json();
+            })
+            .then((data) => {
+                const o = data.orders as BackendOrder[];
+                const parsed = o.map((ord) => ({
+                    id: ord.Id,
+                    tracking_code: ord.Tracking_Code,
+                    delivery_estimate: ord.Delivery_Estimate,
+                    delivery_address: ord.Delivery_Address,
+                    delivery_latitude: ord.Delivery_Latitude,
+                    delivery_longitude: ord.Delivery_Longitude,
+                    seller_address: ord.Seller_Address,
+                    seller_latitude: ord.Seller_Latitude,
+                    seller_longitude: ord.Seller_Longitude,
+                    created_at: ord.Created_At,
+                    price: ord.Price.toString(),
+                    products: ord.Products?.map((p: BackendOrderProduct) => ({
+                        product_id: p.Product_ID,
+                        name: p.Product_Name_At_Purchase,
+                        price: p.Product_Price_At_Purchase,
+                        quantity: p.Quantity,
+                    })) || [],
+                    statusHistory:ord.Updates?.map((p: BackendOrderStatus) => ({
+                        order_status: p.Order_Status,
+                        note: p.Note,
+                        order_location: p.Order_Location,
+                        timestamp: new Date(p.Timestamp_History),
+                        order_id: p.Order_ID,
+                        order: ord ? {
+                            tracking_code: ord.Tracking_Code,
+                            delivery_estimate: ord.Delivery_Estimate,
+                            delivery_address: ord.Delivery_Address,
+                            delivery_latitude: ord.Delivery_Latitude,
+                            delivery_longitude: ord.Delivery_Longitude,
+                            seller_address: ord.Seller_Address,
+                            seller_latitude: ord.Seller_Latitude,
+                            seller_longitude: ord.Seller_Longitude,
+                            created_at: ord.Created_At,
+                            price: ord.Price.toString(),
+                            products: [],
+                            statusHistory: []
+                        } : null,
+                        storage_id: p.Storage_ID
+                    })) || [],
+                }));
+                const filtered = parsed.filter((o) => {
+                    const matchesStatus =
+                        statusFilter === "all" || o.statusHistory?.[0]?.order_status === statusFilter;
+                    return matchesStatus;
+                });
+                setOrders(filtered);
+            })
+            .catch((err) => {
+                console.warn(err);
+                setError('Failed to load orders');
+            })
+            .finally(() => setLoading(false));
+    }
+
+    
+    if (loading) return (
+        <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Orders</h1>
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+            {/* Status filter skeleton */}
+            <div className="w-full md:w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+            {/* Sort selector skeleton */}
+            <div className="w-full md:w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+            </div>
+
+            {/* Orders skeleton list */}
+            <div className="space-y-3">
+            {[1,2,3].map(i => (
+                <div
+                key={i}
+                className="block bg-white dark:bg-gray-900 border rounded-2xl p-5"
+                >
+                <div className="flex justify-between items-start">
+                    <div>
+                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse"></div>
+                    <div className="h-3 w-48 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                    </div>
+                    <div className="text-right">
+                    <div className="h-4 w-16 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse"></div>
+                    <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                    </div>
+                </div>
+                </div>
+            ))}
+            </div>
+        </div>
+    );
+
+    if (error) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <p className="text-xl font-semibold mb-2">Unable to load orders</p>
+                <p className="text-sm text-gray-500 mb-6">{error}</p>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-            <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-                {/* Backend Status Check */}
-                <div className="flex items-center gap-4 p-4 bg-blue-100 dark:bg-blue-900 rounded">
-                    <div>
-                        <p className="font-bold">Backend Status:</p>
-                        <p>{backendStatus}</p>
-                    </div>
-                    <button
-                        onClick={handleTrackOrder}
-                        className="ml-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700"
+        <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Orders</h1>
+            <div className="flex gap-4 mb-6">
+                 {/* Status filter */}
+                <label className="flex flex-col w-full md:w-auto text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Status
+                    <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="mt-1 block w-full md:w-48 rounded-xl border border-gray-300 dark:border-gray-700 
+                                bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 
+                                px-3 py-2 shadow-sm focus:outline-none focus:ring-2 
+                                focus:ring-indigo-500 dark:focus:ring-indigo-400 
+                                transition-colors"
                     >
-                        Track Order
-                    </button>
-                </div>
+                    <option value="all">All statuses</option>
+                    <option value="PROCESSING">Processing</option>
+                    <option value="SHIPPED">Shipped</option>
+                    <option value="IN TRANSIT">In Transit</option>
+                    <option value="OUT FOR DELIVERY">Out for Delivery</option>
+                    <option value="DELIVERED">Delivered</option>
+                    <option value="CANCELLED">Cancelled</option>
+                    
+                    
+                    </select>
+                </label>
 
-                <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-                    <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-                        Tracking Status Frontend
-                    </h1>
+                {/* Sort selector */}
+                <label className="flex flex-col w-full md:w-auto text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Sort by:
+                    <select
+                    value={order_by}
+                    onChange={(e) => setOrderBy(e.target.value)}
+                    className="mt-1 block w-full md:w-48 rounded-xl border border-gray-300 dark:border-gray-700 
+                                bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 
+                                px-3 py-2 shadow-sm focus:outline-none focus:ring-2 
+                                focus:ring-indigo-500 dark:focus:ring-indigo-400 
+                                transition-colors"
+                    >
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    </select>
+                </label>
+            </div>
+            {orders && orders.length > 0 ? (
+                <div className="space-y-3">
+                {orders.map((o) => (
+                    <Link to={`/order/${o.id}`} key={o.id} className="block bg-white dark:bg-gray-900 border rounded-2xl p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="font-medium text-gray-900 dark:text-white">{o.tracking_code}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{o.delivery_address}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="font-semibold text-gray-900 dark:text-white">{o.price}€</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{o.products?.length ?? 0} item{o.products?.length !== 1 ? 's' : ''}</p>
+                            </div>
+                        </div>
+                    </Link>
+                ))}
                 </div>
-            </main>
+            ) : (
+                <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 border rounded-2xl">
+                    <p className="text-gray-500 dark:text-gray-400">No orders found.</p>
+                </div>
+            )}
         </div>
     );
 }

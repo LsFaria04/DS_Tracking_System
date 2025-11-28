@@ -21,6 +21,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 	router.POST("/order/history/add", orderStatusHistory.AddOrderUpdate)
 
 	//routes for the orders
+	router.GET("/orders", orderHandler.GetAllOrders)
 	router.GET("/order/:id", orderHandler.GetOrderByID)
 	router.GET("/order/verify/:order_id", verificationHandler.VerifyOrder)
 	router.POST("/order/add", orderHandler.AddOrder)
