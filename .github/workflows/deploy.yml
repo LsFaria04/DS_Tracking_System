@@ -99,6 +99,7 @@ jobs:
     - name: Build and push frontend image
       working-directory: mips_order_tracking
       env:
+      
         PUBLIC_API_URL: https://tracking-status-138871440259.europe-west1.run.app
         PUBLIC_TOMTOM_API_KEY: ${{ secrets.TOMTOM_API_KEY }}
       run: |
