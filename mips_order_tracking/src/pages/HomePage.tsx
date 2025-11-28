@@ -83,11 +83,11 @@ export default function OrdersPage() {
     if (loading) return (
         <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
             <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Orders</h1>
-            <div className="flex gap-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
             {/* Status filter skeleton */}
-            <div className="w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+            <div className="w-full md:w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
             {/* Sort selector skeleton */}
-            <div className="w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+            <div className="w-full md:w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
             </div>
 
             {/* Orders skeleton list */}
@@ -127,12 +127,12 @@ export default function OrdersPage() {
             <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Orders</h1>
             <div className="flex gap-4 mb-6">
                  {/* Status filter */}
-                <label className="flex flex-col text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="flex flex-col w-full md:w-auto text-sm font-medium text-gray-700 dark:text-gray-300">
                     Status
                     <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="mt-1 block w-48 rounded-xl border border-gray-300 dark:border-gray-700 
+                    className="mt-1 block w-full md:w-48 rounded-xl border border-gray-300 dark:border-gray-700 
                                 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 
                                 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 
                                 focus:ring-indigo-500 dark:focus:ring-indigo-400 
@@ -145,25 +145,25 @@ export default function OrdersPage() {
                     <option value="OUT FOR DELIVERY">Out for Delivery</option>
                     <option value="DELIVERED">Delivered</option>
                     <option value="CANCELLED">Cancelled</option>
-                    <option value="RETURNED">Returned</option>
-                    <option value="FAILED DELIVERY">Failed Delivery</option>
+                    
+                    
                     </select>
                 </label>
 
                 {/* Sort selector */}
-                <label className="flex flex-col text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="flex flex-col w-full md:w-auto text-sm font-medium text-gray-700 dark:text-gray-300">
                     Sort by:
                     <select
                     value={order_by}
                     onChange={(e) => setOrderBy(e.target.value)}
-                    className="mt-1 block w-48 rounded-xl border border-gray-300 dark:border-gray-700 
+                    className="mt-1 block w-full md:w-48 rounded-xl border border-gray-300 dark:border-gray-700 
                                 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 
                                 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 
                                 focus:ring-indigo-500 dark:focus:ring-indigo-400 
                                 transition-colors"
                     >
-                    <option value="newest">Newest first</option>
-                    <option value="oldest">Oldest first</option>
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
                     </select>
                 </label>
             </div>
