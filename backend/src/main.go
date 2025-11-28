@@ -3,6 +3,7 @@ package main
 import (
 	"app/blockchain"
 	"app/routes"
+    "app/pubsub"
 	"context"
 	"fmt"
 	"log"
@@ -10,7 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/pubsub"
+
+    googlepubsub "cloud.google.com/go/pubsub"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -23,6 +25,23 @@ func configDB() (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	return db, err
 }
+
+func configPubSubClient(db *gorm.DB, blockChainClient *blockchain.Client, topicID string, subscriptionID string) (*googlepubsub.Client, *googlepubsub.Subscription, error) {
+    ctx := context.Background()
+    pubsubClient, err := pubsub.StartPubSubClient(ctx, db, blockChainClient)
+
+    if err != nil {
+        return nil, nil, err
+    }
+
+    sub, err := pubsub.SubscribeClient(ctx, pubsubClient, topicID, subscriptionID)
+    if err != nil {
+        return nil, nil, err
+    }
+
+    return pubsubClient, sub, nil
+}
+
 
 func configBlockChainClient() (*blockchain.Client, error) {
 	rpcURL := os.Getenv("BLOCKCHAIN_RPC_URL")
@@ -39,7 +58,7 @@ func configBlockChainClient() (*blockchain.Client, error) {
 }
 
 // Configure the router that will be used for the API
-func configRouter(db *gorm.DB) (*gin.Engine, error) {
+func configRouter(db *gorm.DB) (*gin.Engine, *blockchain.Client, error) {
 	router := gin.Default()
 
 	// Configure CORS middleware (Allow frontend and localhost)
@@ -67,78 +86,12 @@ func configRouter(db *gorm.DB) (*gin.Engine, error) {
 	blockChainClient, err := configBlockChainClient()
 
 	if err != nil {
-		return nil, err
+		return nil,nil, err
 	}
 
 	//registers the routes
 	routes.RegisterRoutes(router, db, blockChainClient)
-	return router, nil
-}
-
-// Test PubSub emulator connection
-func testPubSub() error {
-
-	pubsubEmulatorHost := os.Getenv("PUBSUB_EMULATOR_HOST")
-	if pubsubEmulatorHost == "" {
-		log.Println("PUBSUB_EMULATOR_HOST not set, skipping PubSub test")
-		return nil
-	}
-
-	log.Printf("Testing PubSub emulator at: %s", pubsubEmulatorHost)
-
-	ctx := context.Background()
-
-	// Use the project ID from environment or default to "madeinportugal"
-	projectID := os.Getenv("PUBSUB_PROJECT")
-	if projectID == "" {
-		projectID = "madeinportugal"
-	}
-
-	// Create PubSub client
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return fmt.Errorf("failed to create pubsub client: %v", err)
-	}
-	defer client.Close()
-
-	// Test publishing to "orders" topic
-	topic := client.Topic("orders")
-	defer topic.Stop()
-
-	// Check if topic exists, if not create it
-	exists, err := topic.Exists(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to check if topic exists: %v", err)
-	}
-
-	if !exists {
-		log.Println("Topic 'orders' does not exist, creating...")
-		topic, err = client.CreateTopic(ctx, "orders")
-		if err != nil {
-			return fmt.Errorf("failed to create topic: %v", err)
-		}
-	}
-
-	// Publish a test message
-	testMessage := fmt.Sprintf("Test message from backend - %s", time.Now().Format(time.RFC3339))
-	result := topic.Publish(ctx, &pubsub.Message{
-		Data: []byte(testMessage),
-		Attributes: map[string]string{
-			"source": "tracking-status",
-			"type":   "health-check",
-		},
-	})
-
-	// Block until the message is published
-	msgID, err := result.Get(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to publish message: %v", err)
-	}
-
-	log.Printf("PubSub test successful! Message ID: %s", msgID)
-	log.Printf("Published message: %s", testMessage)
-
-	return nil
+	return router, blockChainClient, nil
 }
 
 func main() {
@@ -149,18 +102,33 @@ func main() {
 		return
 	}
 
-	// Test PubSub emulator if in development mode
-	if err := testPubSub(); err != nil {
-		log.Printf("⚠️  PubSub test failed: %v", err)
-		log.Println("Continuing without PubSub...")
-	}
-
-	router, err := configRouter(db)
+	router, blockChainClient, err := configRouter(db)
 
 	if err != nil {
 		log.Printf("Error while configuring the routing: %v", err)
 		return
 	}
+
+	// Create and start the Pub/Sub client
+    ctx := context.Background()
+
+    client, sub, err := configPubSubClient(db, blockChainClient, "orders_status", "order_status-sub")
+
+    if err != nil {
+        log.Printf("Error configuring PubSub: %v", err)
+        // Continue without PubSub
+        log.Printf("Continuing without PubSub functionality")
+    } else {
+        defer client.Close() // Close client when main exits
+        err = pubsub.StartListener(ctx, sub, db, blockChainClient)
+        
+        if err != nil {
+            log.Printf("Error starting PubSub listener: %v", err)
+            // Continue without listener - don't crash the app
+        } else {
+            log.Printf("PubSub listener started successfully")
+        }
+    }
 
 	router.Run(":8080") // listens on 0.0.0.0:8080 by default
 }
