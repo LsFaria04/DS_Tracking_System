@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import OrdersPage from './OrdersPage';
+import HomePage from './HomePage';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 
-describe('OrdersPage (microfrontend)', () => {
+describe('HomePage (microfrontend)', () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -17,7 +17,7 @@ describe('OrdersPage (microfrontend)', () => {
 
     render(
       <MemoryRouter>
-        <OrdersPage />
+        <HomePage />
       </MemoryRouter>
     );
 
@@ -32,7 +32,7 @@ describe('OrdersPage (microfrontend)', () => {
 
     render(
       <MemoryRouter>
-        <OrdersPage />
+        <HomePage />
       </MemoryRouter>
     );
 
