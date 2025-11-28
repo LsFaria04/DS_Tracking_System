@@ -387,6 +387,7 @@ export default function OrderPage() {
                 <div className="flex flex-col md:flex-row justify-between gap-4 mt-6">
                                                 <button
                                                     onClick={() => setUpdateModal(true)}
+                                                    id = "update"
                                                     disabled={showUpdateModal}
                                                     className="w-full md:w-auto md:min-w-[200px] mt-4 px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                                     >
@@ -396,6 +397,7 @@ export default function OrderPage() {
                         <div className="w-full md:min-w-[200px] md:max-w-20 pt-4 md:pt-0 md:border-t-0 border-gray-200 dark:border-gray-800">
                             <button
                                 onClick={handleVerifyBlockchain}
+                                id = "verification"
                                 disabled={verifying}
                                 className="w-full px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
@@ -479,6 +481,7 @@ export default function OrderPage() {
                     <input
                     type="text"
                     value={address}
+                    id = "delivery-address"
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="Enter new delivery address"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
@@ -624,6 +627,7 @@ export default function OrderPage() {
                                                         href={`https://sepolia.etherscan.io/tx/${txHash}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
+                                                        id = {`link-${idx}`}
                                                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-mono break-all mt-1 block"
                                                         title="View transaction on Etherscan"
                                                     >

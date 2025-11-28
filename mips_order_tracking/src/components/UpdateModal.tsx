@@ -20,6 +20,7 @@ export default function UpdateModal ({ show, onClose, onUpdate, isUpdating,  chi
               <div className="flex flex-row justify-evenly gap-4 mt-4">
                 <button
                   onClick={onUpdate}
+                  id = "send-update"
                   disabled={isUpdating}
                   className="w-full px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 
                             disabled:bg-gray-400 text-white text-sm font-medium rounded-lg 
@@ -37,6 +38,7 @@ export default function UpdateModal ({ show, onClose, onUpdate, isUpdating,  chi
 
                 <button
                   onClick={onClose}
+                  id = "cancel-update"
                   disabled={isUpdating}
                   className="w-full px-4 py-2 max-h-10 bg-gray-300 hover:bg-gray-400 
                             text-black text-sm font-medium rounded-lg transition-colors 

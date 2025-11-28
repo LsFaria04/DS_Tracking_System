@@ -16,6 +16,7 @@ export default function CarbonFootprint({ data }: CarbonFootprintProps) {
         return (
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl">
                 <button
+                    id = "carb-button"
                     onClick={() => setIsOpen(!isOpen)}
                     className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors rounded-2xl"
                 >
@@ -45,6 +46,7 @@ export default function CarbonFootprint({ data }: CarbonFootprintProps) {
     return (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl">
             <button
+                id = "carb-button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors rounded-2xl"
             >
