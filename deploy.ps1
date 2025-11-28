@@ -13,6 +13,7 @@ Set-Location ..\mips_order_tracking
 docker build --build-arg VITE_API_URL=https://tracking-status-138871440259.europe-west1.run.app -t returnedft/tracking-status-frontend:$TAG .
 docker push returnedft/tracking-status-frontend:$TAG
 
+
 # Terraform
 Write-Host "Running terraform with new images..." -ForegroundColor Yellow
 Set-Location ..\terraform
