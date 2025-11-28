@@ -170,7 +170,7 @@ export default function OrdersPage() {
             {orders && orders.length > 0 ? (
                 <div className="space-y-3">
                 {orders.map((o) => (
-                    <Link to={`/order/${o.id}`} key={o.id} className="block bg-white dark:bg-gray-900 border rounded-2xl p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+                    <Link to={`/order/${o.id}`} key={o.id} id={`order-${o.id ? o.id.toString() : "1"}`} className="block bg-white dark:bg-gray-900 border rounded-2xl p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-medium text-gray-900 dark:text-white">{o.tracking_code}</p>
