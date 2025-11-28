@@ -45,8 +45,15 @@ func (h *OrderHandler) GetOrderByID(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetAllOrders(c *gin.Context) {
+	order_by := c.Query("order_by")
+
 	var orders []models.Orders
-	result := h.DB.Preload("Products").Find(&orders)
+	var result *gorm.DB
+	if order_by == "oldest" {
+		result = h.DB.Order("created_at asc").Preload("Products").Find(&orders)
+	} else{
+		result = h.DB.Order("created_at desc").Preload("Products").Find(&orders)
+	}
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})

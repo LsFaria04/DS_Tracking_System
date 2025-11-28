@@ -6,10 +6,17 @@ export default function OrdersPage() {
     const [orders, setOrders] = useState<OrderData[] | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [order_by, setOrderBy] = useState<string>("newest");
+    const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
 
     useEffect(() => {
-        const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
-        fetch(`${apiUrl}/orders`)
+        setLoading(true);
+        handleOrders();
+    }, [order_by]);
+
+    function handleOrders(){
+        console.log(order_by)
+        fetch(`${apiUrl}/orders?order_by=${order_by}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to fetch orders');
                 return res.json();
@@ -43,8 +50,8 @@ export default function OrdersPage() {
                 setError('Failed to load orders');
             })
             .finally(() => setLoading(false));
-    }, []);
-
+    }
+    
     if (loading) return (
         <div className="p-6">
             <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-4 animate-pulse"></div>
@@ -68,6 +75,23 @@ export default function OrdersPage() {
     return (
         <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
             <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Orders</h1>
+            <div className="flex gap-4 mb-6">
+            <label className="flex flex-col text-sm font-medium text-gray-700 dark:text-gray-300">
+                Sort by:
+                <select
+                value={order_by}
+                onChange={(e) => setOrderBy(e.target.value)}
+                className="mt-1 block w-48 rounded-xl border border-gray-300 dark:border-gray-700 
+                            bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 
+                            px-3 py-2 shadow-sm focus:outline-none focus:ring-2 
+                            focus:ring-indigo-500 dark:focus:ring-indigo-400 
+                            transition-colors"
+                >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                </select>
+            </label>
+            </div>
             {orders && orders.length > 0 ? (
                 <div className="space-y-3">
                 {orders.map((o) => (
