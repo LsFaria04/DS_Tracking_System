@@ -23,7 +23,6 @@ export default function OrdersPage() {
                 return res.json();
             })
             .then((data) => {
-                console.log(data)
                 const o = data.orders as BackendOrder[];
                 const parsed = o.map((ord) => ({
                     id: ord.Id,
@@ -43,7 +42,7 @@ export default function OrdersPage() {
                         price: p.Product_Price_At_Purchase,
                         quantity: p.Quantity,
                     })) || [],
-                    statusHistory:ord.Order_Status?.map((p: BackendOrderStatus) => ({
+                    statusHistory:ord.Updates?.map((p: BackendOrderStatus) => ({
                         order_status: p.Order_Status,
                         note: p.Note,
                         order_location: p.Order_Location,
@@ -66,7 +65,6 @@ export default function OrdersPage() {
                         storage_id: p.Storage_ID
                     })) || [],
                 }));
-                console.log(parsed)
                 const filtered = parsed.filter((o) => {
                     const matchesStatus =
                         statusFilter === "all" || o.statusHistory?.[0]?.order_status === statusFilter;
@@ -83,12 +81,34 @@ export default function OrdersPage() {
 
     
     if (loading) return (
-        <div className="p-6">
-            <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-4 animate-pulse"></div>
+        <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Orders</h1>
+            <div className="flex gap-4 mb-6">
+            {/* Status filter skeleton */}
+            <div className="w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+            {/* Sort selector skeleton */}
+            <div className="w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
+            </div>
+
+            {/* Orders skeleton list */}
             <div className="space-y-3">
-                {[1,2,3].map(i => (
-                    <div key={i} className="bg-white dark:bg-gray-900 border rounded p-4 animate-pulse"></div>
-                ))}
+            {[1,2,3].map(i => (
+                <div
+                key={i}
+                className="block bg-white dark:bg-gray-900 border rounded-2xl p-5"
+                >
+                <div className="flex justify-between items-start">
+                    <div>
+                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse"></div>
+                    <div className="h-3 w-48 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                    </div>
+                    <div className="text-right">
+                    <div className="h-4 w-16 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse"></div>
+                    <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                    </div>
+                </div>
+                </div>
+            ))}
             </div>
         </div>
     );
