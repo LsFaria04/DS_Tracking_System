@@ -100,8 +100,9 @@ jobs:
       working-directory: mips_order_tracking
       env:
         PUBLIC_API_URL: https://tracking-status-138871440259.europe-west1.run.app
+        PUBLIC_TOMTOM_API_KEY: ${{ secrets.TOMTOM_API_KEY }}
       run: |
-        docker build -f Dockerfile --build-arg PUBLIC_API_URL=$PUBLIC_API_URL -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
+        docker build -f Dockerfile --build-arg PUBLIC_API_URL=$PUBLIC_API_URL --build-arg PUBLIC_TOMTOM_API_KEY=$PUBLIC_TOMTOM_API_KEY -t returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }} .
         docker push returnedft/tracking-status-frontend:${{ steps.tag.outputs.TAG }}
 
     - name: Setup Terraform
