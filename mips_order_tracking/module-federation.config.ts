@@ -1,22 +1,23 @@
 import { createModuleFederationConfig } from "@module-federation/rsbuild-plugin";
 
 export default createModuleFederationConfig({
-  name: 'mips_order_tracking',
+  name: 'mips_orders_provider',
   filename: 'remoteEntry.js',
   exposes: {
-    './OrderTrackingPage': './src/pages/OrderTrackingPage.tsx',
+    './OrdersPage': './src/pages/HomePage.tsx',
+    './OrderTracking': './src/pages/OrderTrackingPage.tsx',
   },
   shared: {
     react: { 
       singleton: true, 
-      requiredVersion: '^18.3.1',
+      requiredVersion: '^18.0.0',
       eager: true,
       shareKey: 'react',
       shareScope: 'default'
     },
     'react-dom': { 
       singleton: true, 
-      requiredVersion: '^18.3.1',
+      requiredVersion: '^18.0.0',
       eager: true,
       shareKey: 'react-dom',
       shareScope: 'default'

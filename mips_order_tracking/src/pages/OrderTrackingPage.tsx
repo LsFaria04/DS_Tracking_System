@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense, useCallback } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import type { BackendOrder, BackendOrderProduct, BackendOrderStatus, OrderData, OrderStatus, VerificationResult } from "../types";
 import type { CarbonFootprintData } from "../utils/carbonFootprint";
@@ -6,8 +6,8 @@ import { calculateCarbonFootprint } from "../utils/carbonFootprint";
 import CarbonFootprint from "../components/CarbonFootprint";
 import UpdateModal from "../components/UpdateModal";
 import getCoordinatesFromAddress from "../utils/address_coordinates";
-
-const OrderMap = lazy(() => import('../components/OrderMap'));
+import '../index.css';
+import OrderMap from '../components/OrderMap';
 
 export default function OrderPage() {
     const { id } = useParams<{ id: string }>(); 

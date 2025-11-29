@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { OrderData, BackendOrder, BackendOrderProduct, BackendOrderStatus } from '../types';
+import '../index.css';
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<OrderData[] | null>(null);
