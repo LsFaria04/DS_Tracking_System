@@ -16,34 +16,36 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 	blockchainHandler := handlers.BlockchainHandler{}
 	verificationHandler := handlers.VerificationHandler{DB: db, Client: blockChainClient}
 
+	apiRoutes := router.Group("/api")
+	
 	//routes for the order history
-	router.GET("/order/history/:order_id", orderStatusHistory.GetOrderStatusByOrderID)
-	router.POST("/order/history/add", orderStatusHistory.AddOrderUpdate)
+	apiRoutes.GET("/order/history/:order_id", orderStatusHistory.GetOrderStatusByOrderID)
+	apiRoutes.POST("/order/history/add", orderStatusHistory.AddOrderUpdate)
 
 	//routes for the orders
-	router.GET("/orders", orderHandler.GetAllOrders)
-	router.GET("/order/:id", orderHandler.GetOrderByID)
-	router.GET("/order/verify/:order_id", verificationHandler.VerifyOrder)
-	router.POST("/order/add", orderHandler.AddOrder)
-	router.POST("/order/update", orderHandler.UpdateOrder)
+	apiRoutes.GET("/orders", orderHandler.GetAllOrders)
+	apiRoutes.GET("/order/:id", orderHandler.GetOrderByID)
+	apiRoutes.GET("/order/verify/:order_id", verificationHandler.VerifyOrder)
+	apiRoutes.POST("/order/add", orderHandler.AddOrder)
+	apiRoutes.POST("/order/update", orderHandler.UpdateOrder)
 
 	//routes for order products (using order-products path to avoid conflicts)
-	router.GET("/order-products", orderProductHandler.GetOrderProducts) // Query param: ?order_id=X
-	router.POST("/order-products", orderProductHandler.AddOrderProduct)
-	router.GET("/order-products/:id", orderProductHandler.GetOrderProductByID)
-	router.PUT("/order-products/:id", orderProductHandler.UpdateOrderProduct)
-	router.DELETE("/order-products/:id", orderProductHandler.DeleteOrderProduct)
+	apiRoutes.GET("/order-products", orderProductHandler.GetOrderProducts) // Query param: ?order_id=X
+	apiRoutes.POST("/order-products", orderProductHandler.AddOrderProduct)
+	apiRoutes.GET("/order-products/:id", orderProductHandler.GetOrderProductByID)
+	apiRoutes.PUT("/order-products/:id", orderProductHandler.UpdateOrderProduct)
+	apiRoutes.DELETE("/order-products/:id", orderProductHandler.DeleteOrderProduct)
 
 	//routes for products
-	router.GET("/products", productHandler.GetAllProducts)
-	router.GET("/products/:id", productHandler.GetProductByID)
+	apiRoutes.GET("/products", productHandler.GetAllProducts)
+	apiRoutes.GET("/products/:id", productHandler.GetProductByID)
 
 	//routes for the storages
-	router.GET("/storages", storageHandler.GetAllStorages)
+	apiRoutes.GET("/storages", storageHandler.GetAllStorages)
 
 	// Blockchain endpoints (should not be public in the production)
-	router.GET("/blockchain/status", blockchainHandler.GetBlockchainStatus)
-	router.GET("/blockchain/deploy", blockchainHandler.DeployContract)
+	apiRoutes.GET("/blockchain/status", blockchainHandler.GetBlockchainStatus)
+	apiRoutes.GET("/blockchain/deploy", blockchainHandler.DeployContract)
 
 	//old routes for testing
 	router.GET("/ping", func(c *gin.Context) {
