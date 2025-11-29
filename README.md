@@ -1,6 +1,6 @@
 # Order Tracking System
 
-Backend developed with Go, frontend with React (v18.3.1), deployed on Google Cloud Platform.
+Backend developed with Go, frontend with React (v18.0.0), deployed on Google Cloud Platform.
 
 The main development milestones and changes are reported in the [changelog](docs/CHANGELOG.MD) file.
 
@@ -45,10 +45,10 @@ To run the Compose and Dockerfile files, make sure to create a .env file contain
 
 ```bash
 # From project root
-cd frontend
+cd mips_order_tracking
 
 # Copy environment template and install deps
-cp .env.example .env
+cp .env.example .env #Some keys may need to be included manually
 npm install
 
 # Start dev container with hot reload (preferred)
@@ -65,7 +65,7 @@ npm run dev
 To stop the frontend containers:
 
 ```bash
-cd frontend
+cd mips_order_tracking
 docker compose -f compose.dev.yml down
 ```
 
