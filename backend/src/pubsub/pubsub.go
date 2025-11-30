@@ -116,7 +116,29 @@ func PublishNotification(ctx context.Context, client *pubsub.Client, notificatio
     return nil
 }
 
-func buildNotificationPayload(messageData []byte, db *gorm.DB, blockChainClient *blockchain.Client) []byte {
+func buildNotificationPayloadOrder(messageData []byte, db *gorm.DB, blockChainClient *blockchain.Client) []byte {
+
+    // Parse the update to the order status model
+    var order models.Orders
+    err := json.Unmarshal(messageData, &order)
+    if err != nil {
+        log.Printf("Failed to unmarshal order update for notification: %v", err)
+        return nil
+    }
+
+    notification := fmt.Sprintf(`{
+       "user_id": %d, 
+        "type": "sms", 
+        "title": "New Order Created", 
+        "payload": "Order with ID %d has been created.", 
+        "hyperlink": "https://tracking-status-frontend-edneicy3ca-ew.a.run.app/order/%d", 
+        "created_at": "` + time.Now().Format(time.RFC3339) + `" 
+    }`, order.Customer_ID, order.Id)
+
+    return []byte(notification)
+}
+
+func buildNotificationPayloadStatus(messageData []byte, db *gorm.DB, blockChainClient *blockchain.Client) []byte {
 
     // Parse the update to the order status model
     var order_update models.OrderStatusHistory
@@ -149,7 +171,7 @@ func buildNotificationPayload(messageData []byte, db *gorm.DB, blockChainClient 
 func StartListener(ctx context.Context, client *pubsub.Client, sub *pubsub.Subscription, db *gorm.DB, blockChainClient *blockchain.Client) error {
 	// Handler
     orderStatusHistory := handlers.OrderStatusHistoryHandler{DB: db, Client: blockChainClient}
-	fmt.Println("Listening for messages...")
+	fmt.Println("Listening for order status update messages...")
 	go func() {
 		err := sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 			fmt.Printf("RAW MESSAGE %s\n", string(m.Data))
@@ -176,7 +198,52 @@ func StartListener(ctx context.Context, client *pubsub.Client, sub *pubsub.Subsc
 				fmt.Printf("Successfully saved update via HTTP handler\n")
 
                 // Send notification for status update
-                notificationPayload := buildNotificationPayload(m.Data, db, blockChainClient)
+                notificationPayload := buildNotificationPayloadStatus(m.Data, db, blockChainClient)
+                if err:= PublishNotification(ctx, client, notificationPayload); err != nil {
+                    log.Printf("Failed to publish notification: %v", err)
+                }
+			}
+    	})
+
+		if err != nil {
+			log.Printf("PubSub listener stopped: %v", err)
+		}
+
+	}()
+	return nil
+}
+
+func StartListenerOrders(ctx context.Context, client *pubsub.Client, sub *pubsub.Subscription, db *gorm.DB, blockChainClient *blockchain.Client) error {
+	// Handler
+    orderHandler := handlers.OrderHandler{DB: db, Client: blockChainClient}
+	fmt.Println("Listening for new order messages...")
+	go func() {
+		err := sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+			fmt.Printf("RAW MESSAGE %s\n", string(m.Data))
+			m.Ack()
+
+			// Create a mock Gin context
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			
+			// Create a request with the PubSub data as JSON body
+			c.Request = httptest.NewRequest("POST", "/order/add", bytes.NewReader(m.Data))
+			c.Request.Header.Set("Content-Type", "application/json")
+
+			// Call the existing handler
+			orderHandler.AddOrder(c)
+
+			// Check the response
+			fmt.Printf("Response Status: %d, Body: %s\n", w.Code, w.Body.String())
+			
+			if w.Code >= 400 {
+				fmt.Printf("Failed to save update: Status %d, Response: %s\n", w.Code, w.Body.String())
+				m.Nack()
+			} else {
+				fmt.Printf("Successfully saved update via HTTP handler\n")
+
+                // Send notification for status update
+                notificationPayload := buildNotificationPayloadOrder(m.Data, db, blockChainClient)
                 if err:= PublishNotification(ctx, client, notificationPayload); err != nil {
                     log.Printf("Failed to publish notification: %v", err)
                 }
