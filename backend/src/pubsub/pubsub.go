@@ -3,6 +3,7 @@ package pubsub
 import (
 	"app/blockchain"
 	"app/handlers"
+	"app/models"
 	"bytes"
 	"context"
 	"fmt"
@@ -11,13 +12,12 @@ import (
 	"os"
 	"strings"
 	"time"
+    "encoding/json"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
-
-
 
 // Initializes pubsub client
 func StartPubSubClient(ctx context.Context, db *gorm.DB, blockChainClient *blockchain.Client) (*pubsub.Client, error) {
@@ -33,9 +33,9 @@ func StartPubSubClient(ctx context.Context, db *gorm.DB, blockChainClient *block
 	return client, nil
 }
 
-func SubscribeClient(ctx context.Context, client *pubsub.Client, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
+func CreateTopicWithID(ctx context.Context, client *pubsub.Client, topicID string) (*pubsub.Topic, error) {
 
-	 // Get or create topic
+    // Get or create topic
     topic := client.Topic(topicID)
     exists, err := topic.Exists(ctx)
     if err != nil {
@@ -57,10 +57,21 @@ func SubscribeClient(ctx context.Context, client *pubsub.Client, topicID string,
             }
         }
     }
+    return topic, nil
+}
+
+
+func SubscribeClient(ctx context.Context, client *pubsub.Client, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
+
+    // Ensure topic exists
+    topic, err := CreateTopicWithID(ctx, client, topicID)
+    if err != nil {
+        return nil, err
+    }
 
     // Get or create subscription
     sub := client.Subscription(subscriptionID)
-    exists, err = sub.Exists(ctx)
+    exists, err := sub.Exists(ctx)
     if err != nil {
         log.Printf("Failed to check if subscription exists: %v", err)
         // Continue anyway
@@ -87,7 +98,55 @@ func SubscribeClient(ctx context.Context, client *pubsub.Client, topicID string,
     return sub, nil
 }
 
-func StartListener(ctx context.Context, sub *pubsub.Subscription, db *gorm.DB, blockChainClient *blockchain.Client) error {
+func PublishNotification(ctx context.Context, client *pubsub.Client, notification []byte) error {
+    topic := client.Topic("notifications")
+
+    result := topic.Publish(ctx, &pubsub.Message{
+        Data: notification,
+    })
+
+    id, err := result.Get(ctx)
+    if err != nil {
+        log.Printf("Failed to publish notification: %v", err)
+        return err
+    }
+
+    log.Printf("Published notification with message ID: %s", id)
+    log.Printf("Notification payload: %s", string(notification))
+    return nil
+}
+
+func buildNotificationPayload(messageData []byte, db *gorm.DB, blockChainClient *blockchain.Client) []byte {
+
+    // Parse the update to the order status model
+    var order_update models.OrderStatusHistory
+    err := json.Unmarshal(messageData, &order_update)
+    if err != nil {
+        log.Printf("Failed to unmarshal order update for notification: %v", err)
+        return nil
+    }
+
+    // Create handler to get user ID
+    handler := handlers.OrderHandler{DB: db, Client: blockChainClient}
+    userID, err := handlers.GetUserIDByOrderID(handler.DB, order_update.Order_ID)
+    if err != nil {
+        log.Printf("Failed to get user ID for order ID %d: %v", order_update.Order_ID, err)
+        return nil
+    }
+
+    notification := fmt.Sprintf(`{
+       "user_id": %d, 
+        "type": "sms", 
+        "title": "Order Status Update", 
+        "payload": %s, 
+        "hyperlink": "https://tracking-status-frontend-edneicy3ca-ew.a.run.app/order/%d", 
+        "created_at": "` + time.Now().Format(time.RFC3339) + `" 
+    }`, userID, order_update.Order_Status, order_update.Order_ID)
+
+    return []byte(notification)
+}
+
+func StartListener(ctx context.Context, client *pubsub.Client, sub *pubsub.Subscription, db *gorm.DB, blockChainClient *blockchain.Client) error {
 	// Handler
     orderStatusHistory := handlers.OrderStatusHistoryHandler{DB: db, Client: blockChainClient}
 	fmt.Println("Listening for messages...")
@@ -115,6 +174,12 @@ func StartListener(ctx context.Context, sub *pubsub.Subscription, db *gorm.DB, b
 				m.Nack()
 			} else {
 				fmt.Printf("Successfully saved update via HTTP handler\n")
+
+                // Send notification for status update
+                notificationPayload := buildNotificationPayload(m.Data, db, blockChainClient)
+                if err:= PublishNotification(ctx, client, notificationPayload); err != nil {
+                    log.Printf("Failed to publish notification: %v", err)
+                }
 			}
     	})
 
