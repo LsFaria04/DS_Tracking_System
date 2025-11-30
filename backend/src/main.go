@@ -26,7 +26,7 @@ func configDB() (*gorm.DB, error) {
 	return db, err
 }
 
-func configPubSubClient(db *gorm.DB, blockChainClient *blockchain.Client, topicID string, subscriptionID string) (*googlepubsub.Client, *googlepubsub.Subscription, error) {
+func configPubSubClient(db *gorm.DB, blockChainClient *blockchain.Client, topicID []string, subscriptionID []string) (*googlepubsub.Client, []*googlepubsub.Subscription, error) {
     ctx := context.Background()
     pubsubClient, err := pubsub.StartPubSubClient(ctx, db, blockChainClient)
 
@@ -34,12 +34,14 @@ func configPubSubClient(db *gorm.DB, blockChainClient *blockchain.Client, topicI
         return nil, nil, err
     }
 
-    sub, err := pubsub.SubscribeClient(ctx, pubsubClient, topicID, subscriptionID)
-    if err != nil {
-        return nil, nil, err
+    subs := make([]*googlepubsub.Subscription, len(subscriptionID))
+    for i, subID := range subscriptionID {
+        subs[i], err = pubsub.SubscribeClient(ctx, pubsubClient, topicID[i], subID)
+        if err != nil {
+            return nil, nil, err
+        } 
     }
-
-    return pubsubClient, sub, nil
+    return pubsubClient, subs, nil
 }
 
 
@@ -113,7 +115,7 @@ func main() {
     ctx := context.Background()
 
 	// Configure Pub/Sub client and subscriptions 
-    client, sub, err := configPubSubClient(db, blockChainClient, "orders_status", "order_status-sub")
+    client, subs, err := configPubSubClient(db, blockChainClient, []string{"orders_status", "checkout_orders"}, []string{"order_status-sub", "checkout_orders-sub"})
 
 	// Create notifications topic to send notifications whenever status updates occur
 	_, err = pubsub.CreateTopicWithID(ctx, client, "notifications")
@@ -121,21 +123,25 @@ func main() {
 		log.Printf("Error creating notifications topic: %v", err)
 	}
 
-
+	
     if err != nil {
         log.Printf("Error configuring PubSub: %v", err)
         // Continue without PubSub
         log.Printf("Continuing without PubSub functionality")
     } else {
         defer client.Close() // Close client when main exits
-        err = pubsub.StartListener(ctx, client, sub, db, blockChainClient)
+        err = pubsub.StartListener(ctx, client, subs[0], db, blockChainClient)
         
         if err != nil {
-            log.Printf("Error starting PubSub listener: %v", err)
-            // Continue without listener - don't crash the app
-        } else {
-            log.Printf("PubSub listener started successfully")
-        }
+            log.Printf("Error starting PubSub listener for order status: %v", err)
+        } 
+
+		err = pubsub.StartListenerOrders(ctx, client, subs[1], db, blockChainClient)
+		if err != nil {
+			log.Printf("Error starting PubSub listener for checkout orders: %v", err)
+		}
+
+		pubsub.TestOrdersPubSub()  // Uncomment to test order publishing
     }
 
 	router.Run(":8080") // listens on 0.0.0.0:8080 by default
