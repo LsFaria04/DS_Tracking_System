@@ -18,7 +18,7 @@ export default function OrdersPage() {
     }, [order_by, statusFilter]);
 
     function handleOrders(){
-        fetch(`${apiUrl}/orders?order_by=${order_by}`)
+        fetch(`${apiUrl}/api/orders?order_by=${order_by}`)
             .then((res) => {
                 if (!res.ok) setError("Could not load the orders");
                 return res.json();

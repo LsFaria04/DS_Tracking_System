@@ -28,7 +28,7 @@ export default function OrderPage() {
     useEffect(() => {
         const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
         
-        fetch(`${apiUrl}/order/${id}`)
+        fetch(`${apiUrl}/api/order/${id}`)
             .then(res => {
                 if (!res.ok) setError("Could not load the order");
                 return res.json();
@@ -61,7 +61,7 @@ export default function OrderPage() {
             })
             .finally(() => setLoading(false));
             
-            fetch(`${apiUrl}/order/history/${id}`)
+            fetch(`${apiUrl}/api/order/history/${id}`)
             .then(res => {
                 if (!res.ok) setError("Could not load the order");
                 return res.json();
@@ -128,7 +128,7 @@ export default function OrderPage() {
         
         try {
             const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
-            const response = await fetch(`${apiUrl}/order/verify/${id}`);
+            const response = await fetch(`${apiUrl}/api/order/verify/${id}`);
             const data = await response.json();
             
             if (response.ok) {
@@ -172,7 +172,7 @@ export default function OrderPage() {
 
         try {
             const apiUrl = process.env.PUBLIC_API_URL || "http://localhost:8080";
-            const response = await fetch(`${apiUrl}/order/update`, {
+            const response = await fetch(`${apiUrl}/api/order/update`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(
