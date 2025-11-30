@@ -44,14 +44,14 @@ VALUES
 -- Insert products for each order
 INSERT INTO order_products (order_id, product_id, quantity, product_name_at_purchase, product_price_at_purchase)
 VALUES
-  (1, 32586490, 2, 'Handcrafted Cork Wallet',  24.99),
-  (1, 32586503, 1, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
-  (2, 32586505, 3, 'Artisan Olive Wood Cutting Board', 38.75),
-  (3, 32586512, 1, 'Hand-painted Azulejo Coaster Set', 19.99),
-  (3, 32586516, 2, 'Traditional Filigree Silver Earrings', 67.00),
-  (4, 32586490, 1,  'Handcrafted Cork Wallet',  24.99),
-  (4, 32586516, 3, 'Traditional Filigree Silver Earrings', 67.00),
-  (5, 32586503, 1, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
-  (5, 32586512, 2, 'Hand-painted Azulejo Coaster Set', 19.99),
-  (6, 32586490, 1, 'Handcrafted Cork Wallet',  24.99),
-  (6, 32586505, 2, 'Artisan Olive Wood Cutting Board', 38.75);
+  (1, 32865210, 2, 'Handcrafted Cork Wallet',  24.99),
+  (1, 32865209, 1, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
+  (2, 32865208, 3, 'Artisan Olive Wood Cutting Board', 38.75),
+  (3, 32865211, 1, 'Hand-painted Azulejo Coaster Set', 19.99),
+  (3, 32865206, 2, 'Traditional Filigree Silver Earrings', 67.00),
+  (4, 32865210, 1,  'Handcrafted Cork Wallet',  24.99),
+  (4, 32865206, 3, 'Traditional Filigree Silver Earrings', 67.00),
+  (5, 32865209, 1, 'Portuguese Ceramic Tile Set (6 pieces)', 45.50),
+  (5, 32865211, 2, 'Hand-painted Azulejo Coaster Set', 19.99),
+  (6, 32865210, 1, 'Handcrafted Cork Wallet',  24.99),
+  (6, 32865208, 2, 'Artisan Olive Wood Cutting Board', 38.75);
