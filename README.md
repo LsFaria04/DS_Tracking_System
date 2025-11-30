@@ -59,7 +59,7 @@ npm run dev
 
 ### Accessing Services
 
-- **Frontend**: http://localhost:5173
+- **Frontend**: http://localhost:5174
 - **Backend**: http://localhost:8080 (must be running for API calls)
 
 To stop the frontend containers:
