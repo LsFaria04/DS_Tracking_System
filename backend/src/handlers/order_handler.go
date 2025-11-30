@@ -23,6 +23,16 @@ type OrderHandler struct {
 	Client *blockchain.Client
 }
 
+func GetUserIDByOrderID(db *gorm.DB, orderID uint) (uint, error) {
+	var order models.Orders
+	result := db.First(&order, orderID)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return order.Customer_ID, nil
+}
+
 func (h *OrderHandler) GetOrderByID(c *gin.Context) {
 	id := c.Param("id")
 

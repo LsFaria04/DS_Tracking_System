@@ -112,7 +112,15 @@ func main() {
 	// Create and start the Pub/Sub client
     ctx := context.Background()
 
+	// Configure Pub/Sub client and subscriptions 
     client, sub, err := configPubSubClient(db, blockChainClient, "orders_status", "order_status-sub")
+
+	// Create notifications topic to send notifications whenever status updates occur
+	_, err = pubsub.CreateTopicWithID(ctx, client, "notifications")
+	if err != nil {
+		log.Printf("Error creating notifications topic: %v", err)
+	}
+
 
     if err != nil {
         log.Printf("Error configuring PubSub: %v", err)
@@ -120,7 +128,7 @@ func main() {
         log.Printf("Continuing without PubSub functionality")
     } else {
         defer client.Close() // Close client when main exits
-        err = pubsub.StartListener(ctx, sub, db, blockChainClient)
+        err = pubsub.StartListener(ctx, client, sub, db, blockChainClient)
         
         if err != nil {
             log.Printf("Error starting PubSub listener: %v", err)
