@@ -73,7 +73,7 @@ func configRouter(db *gorm.DB) (*gin.Engine, *blockchain.Client, error) {
 				return true
 			}
 			// Allow any .run.app domain (Cloud Run)
-			if strings.HasSuffix(origin, ".run.app") {
+			if strings.HasSuffix(origin, ".run.app") || strings.HasPrefix(origin, "https://frontend.madeinportugal.store") {
 				return true
 			}
 			return false
@@ -104,7 +104,7 @@ func main() {
 		return
 	}
 
-	router, blockChainClient, err := configRouter(db)
+	router, _, err := configRouter(db)
 
 	if err != nil {
 		log.Printf("Error while configuring the routing: %v", err)
@@ -112,8 +112,9 @@ func main() {
 	}
 
 	// Create and start the Pub/Sub client
-    ctx := context.Background()
+    //ctx := context.Background()
 
+	/*
 	// Configure Pub/Sub client and subscriptions 
     client, subs, err := configPubSubClient(db, blockChainClient, []string{"orders_status", "checkout_orders"}, []string{"order_status-sub", "checkout_orders-sub"})
 
@@ -123,7 +124,6 @@ func main() {
 		log.Printf("Error creating notifications topic: %v", err)
 	}
 
-	
     if err != nil {
         log.Printf("Error configuring PubSub: %v", err)
         // Continue without PubSub
@@ -143,6 +143,7 @@ func main() {
 
 		pubsub.TestOrdersPubSub()  // Uncomment to test order publishing
     }
+	*/
 
 	router.Run(":8080") // listens on 0.0.0.0:8080 by default
 }
