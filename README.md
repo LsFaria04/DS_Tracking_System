@@ -4,6 +4,10 @@ Backend developed with Go, frontend with React (v18.0.0), deployed on Google Clo
 
 The main development milestones and changes are reported in the [changelog](docs/CHANGELOG.MD) file.
 
+## API Documentation
+
+For detailed information, refer to the backend API documentation available [here](https://documenter.getpostman.com/view/44004544/2sB3dPTVyi).
+
 ## Quick Start
 
 To start developing use the following command to create the docker containers:
