@@ -229,6 +229,12 @@ export default function OrderPage() {
                         }
                     : prev
                 );
+
+                // Close modal after successful update
+                setTimeout(() => {
+                    setUpdateModal(false);
+                    setAddress("");
+                }, 1500); // Delay to show success message
                 
             }
         } catch (error) {
@@ -405,7 +411,7 @@ export default function OrderPage() {
                             size="small"
                             sx={{ width: { xs: '100%', md: 'auto' }, minWidth: { md: '200px' }, px: 4, py: 1, maxHeight: 40, mt: 1, fontSize: '0.875rem', fontWeight: 500, textTransform: 'none' }}
                         >
-                            Update Order
+                            Update Address
                         </Button>
                         {/* Blockchain Verification */}
                         <Box sx={{ width: { xs: '100%', md: 'auto' }, minWidth: { md: '200px' }, maxWidth: { md: 80 } }}>
