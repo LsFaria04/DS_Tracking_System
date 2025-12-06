@@ -23,7 +23,7 @@ func (h *OrderProductHandler) GetOrderProducts(c *gin.Context) {
 	}
 
 	var orderProducts []models.OrderProduct
-	result := h.DB.Preload("Product").Where("order_id = ?", orderID).Find(&orderProducts)
+	result := h.DB.Where("order_id = ?", orderID).Find(&orderProducts)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
@@ -126,7 +126,7 @@ func (h *OrderProductHandler) UpdateOrderProduct(c *gin.Context) {
 	}
 
 	// Load the product relation for the response
-	h.DB.Preload("Product").First(&orderProduct, orderProduct.ID)
+	h.DB.First(&orderProduct, orderProduct.ID)
 
 	c.JSON(http.StatusOK, gin.H{"order_product": orderProduct})
 }
