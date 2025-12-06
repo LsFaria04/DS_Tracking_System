@@ -3,6 +3,7 @@ package routes
 import (
 	"app/blockchain"
 	"app/handlers"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -17,7 +18,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 	verificationHandler := handlers.VerificationHandler{DB: db, Client: blockChainClient}
 
 	apiRoutes := router.Group("/api")
-	
+
 	//routes for the order history
 	apiRoutes.GET("/order/history/:order_id", orderStatusHistory.GetOrderStatusByOrderID)
 	apiRoutes.POST("/order/history/add", orderStatusHistory.AddOrderUpdate)
@@ -28,6 +29,7 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, blockChainClient *blockchai
 	apiRoutes.GET("/order/verify/:order_id", verificationHandler.VerifyOrder)
 	apiRoutes.POST("/order/add", orderHandler.AddOrder)
 	apiRoutes.POST("/order/update", orderHandler.UpdateOrder)
+	apiRoutes.POST("/order/cancel", orderHandler.CancelOrder)
 
 	//routes for order products (using order-products path to avoid conflicts)
 	apiRoutes.GET("/order-products", orderProductHandler.GetOrderProducts) // Query param: ?order_id=X

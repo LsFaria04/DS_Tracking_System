@@ -19,6 +19,10 @@ import {
   CircularProgress,
   Skeleton,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 
 export default function OrderPage() {
@@ -35,6 +39,8 @@ export default function OrderPage() {
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [statusType, setStatusType] = useState<"success" | "error" | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
 
 
     useEffect(() => {
@@ -245,6 +251,109 @@ export default function OrderPage() {
         setIsUpdating(false);
     };
 
+    const handleCancelOrder = async () => {
+        setIsCancelling(true);
+        setStatusMessage(null);
+
+        try {
+            const apiUrl = process.env.PUBLIC_API_URL || "http://localhost:8080";
+            const response = await fetch(`${apiUrl}/api/order/cancel`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    order_id: Number(id),
+                    reason: "Customer requested cancellation",
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setStatusMessage(errorData.error || "Cancellation failed. Please try again.");
+                setStatusType("error");
+                setIsCancelling(false);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+                setStatusMessage(data.error);
+                setStatusType("error");
+            } else {
+                setStatusMessage("Order cancelled successfully!");
+                setStatusType("success");
+
+                // Update the order status in the UI
+                setOrder((prev) =>
+                    prev
+                    ? {
+                        ...prev,
+                        }
+                    : prev
+                );
+
+                // Refresh order history to show new cancelled status
+                const historyUrl = process.env.PUBLIC_API_URL || "http://localhost:8080";
+                fetch(`${historyUrl}/api/order/history/${id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const o = data.order_status_history as BackendOrderStatus[];
+                        const history: OrderStatus[] = [];
+                        o.forEach((element: BackendOrderStatus) => {
+                            history.push({
+                                order_status: element.Order_Status,
+                                note: element.Note,
+                                order_location: element.Order_Location,
+                                timestamp: new Date(element.Timestamp_History),
+                                order_id: element.Order_ID,
+                                storage_id: element.Storage_ID,
+                                Storage: element.Storage ? {
+                                    Id: element.Storage.Id,
+                                    Name: element.Storage.Name,
+                                    Address: element.Storage.Address,
+                                    Latitude: element.Storage.Latitude,
+                                    Longitude: element.Storage.Longitude,
+                                    Created_At: element.Storage.Created_At
+                                } : undefined,
+                                order: element.Order ? {
+                                    tracking_code: element.Order.Tracking_Code,
+                                    delivery_estimate: element.Order.Delivery_Estimate,
+                                    delivery_address: element.Order.Delivery_Address,
+                                    delivery_latitude: element.Order.Delivery_Latitude,
+                                    delivery_longitude: element.Order.Delivery_Longitude,
+                                    seller_address: element.Order.Seller_Address,
+                                    seller_latitude: element.Order.Seller_Latitude,
+                                    seller_longitude: element.Order.Seller_Longitude,
+                                    created_at: element.Order.Created_At,
+                                    price: element.Order.Price.toString(),
+                                    products: element.Order.Products?.map((p: BackendOrderProduct) => ({
+                                        product_id: p.Product_ID,
+                                        name: p.Product_Name_At_Purchase,
+                                        price: p.Product_Price_At_Purchase,
+                                        quantity: p.Quantity
+                                    })) || [],
+                                    statusHistory: []
+                                } : null
+                            })
+                        });
+                        history.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+                        setOrderHistory(history);
+                    })
+                    .catch(error => console.warn("Failed to refresh order history:", error));
+
+                // Close dialog after a delay
+                setTimeout(() => {
+                    setShowCancelConfirm(false);
+                }, 1500);
+            }
+        } catch (error) {
+            setStatusMessage("Network error. Please try again.");
+            setStatusType("error");
+        }
+
+        setIsCancelling(false);
+    };
+
 
 
 
@@ -413,6 +522,25 @@ export default function OrderPage() {
                         >
                             Update Address
                         </Button>
+                        {/* Cancel Order */}
+                        <Button
+                            onClick={() => setShowCancelConfirm(true)}
+                            id="cancel"
+                            disabled={isCancelling}
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            sx={{ width: { xs: '100%', md: 'auto' }, minWidth: { md: '200px' }, px: 4, py: 1, maxHeight: 40, mt: 1, fontSize: '0.875rem', fontWeight: 500, textTransform: 'none' }}
+                        >
+                            {isCancelling ? (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <CircularProgress size={16} color="inherit" />
+                                    Cancelling...
+                                </Box>
+                            ) : (
+                                'Cancel Order'
+                            )}
+                        </Button>
                         {/* Blockchain Verification */}
                         <Box sx={{ width: { xs: '100%', md: 'auto' }, minWidth: { md: '200px' }, maxWidth: { md: 80 } }}>
                             <Button
@@ -537,6 +665,52 @@ export default function OrderPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
                     />
             </UpdateModal>
+
+            {/* Cancel Order Confirmation Dialog */}
+            <Dialog open={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 600 }}>Cancel Order</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ py: 2 }}>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                            Are you sure you want to cancel this order? This action cannot be undone.
+                        </Typography>
+                        {statusMessage && (
+                            <Alert severity={statusType === "success" ? "success" : "error"} sx={{ mb: 2 }}>
+                                {statusMessage}
+                            </Alert>
+                        )}
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ gap: 1, p: 2 }}>
+                    <Button
+                        onClick={() => handleCancelOrder()}
+                        id="confirm-cancel"
+                        disabled={isCancelling}
+                        variant="contained"
+                        color="error"
+                        sx={{ minWidth: "120px" }}
+                    >
+                        {isCancelling ? (
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                <CircularProgress size={16} color="inherit" />
+                                Cancelling...
+                            </Box>
+                        ) : (
+                            "Yes, Cancel Order"
+                        )}
+                    </Button>
+                    <Button
+                        onClick={() => setShowCancelConfirm(false)}
+                        id="cancel-dialog"
+                        disabled={isCancelling}
+                        variant="outlined"
+                        color="inherit"
+                        sx={{ minWidth: "120px" }}
+                    >
+                        No, Keep Order
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Products */}
             <Box sx={{ mb: 6 }}>
