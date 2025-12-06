@@ -2,6 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { OrderData, BackendOrder, BackendOrderProduct, BackendOrderStatus } from '../types';
 import '../index.css';
+import {
+  Container,
+  Box,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Card,
+  CardContent,
+  Skeleton,
+  Alert,
+  useTheme,
+} from '@mui/material';
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<OrderData[] | null>(null);
@@ -9,6 +23,7 @@ export default function OrdersPage() {
     const [error, setError] = useState<string | null>(null);
     const [order_by, setOrderBy] = useState<string>("newest");
     const [statusFilter, setStatusFilter] = useState<string>("all");
+    const theme = useTheme();
 
     const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -82,114 +97,109 @@ export default function OrdersPage() {
 
     
     if (loading) return (
-        <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
-            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Orders</h1>
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <Container maxWidth={false} sx={{ maxWidth: '64rem', py: 4 }}>
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 600 }}>Orders</Typography>
             {/* Status filter skeleton */}
-            <div className="w-full md:w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
             {/* Sort selector skeleton */}
-            <div className="w-full md:w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse"></div>
-            </div>
-
-            {/* Orders skeleton list */}
-            <div className="space-y-3">
-            {[1,2,3].map(i => (
-                <div
-                key={i}
-                className="block bg-white dark:bg-gray-900 border rounded-2xl p-5"
-                >
-                <div className="flex justify-between items-start">
-                    <div>
-                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse"></div>
-                    <div className="h-3 w-48 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
-                    </div>
-                    <div className="text-right">
-                    <div className="h-4 w-16 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse"></div>
-                    <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
-                    </div>
-                </div>
-                </div>
-            ))}
-            </div>
-        </div>
+            <Box sx={{ display: 'flex', gap: 2, mb: 4, flexDirection: { xs: 'column', md: 'row' } }}>
+                <Skeleton variant="rectangular" width="100%" height={40} sx={{ maxWidth: 200 }} />
+                <Skeleton variant="rectangular" width="100%" height={40} sx={{ maxWidth: 200 }} />
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {[1, 2, 3].map((i) => (
+                    <Card key={i}>
+                        <CardContent>
+                            <Skeleton variant="text" width="30%" height={32} sx={{ mb: 1 }} />
+                            <Skeleton variant="text" width="60%" height={20} />
+                        </CardContent>
+                    </Card>
+                ))}
+            </Box>
+        </Container>
     );
 
     if (error) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-                <p className="text-xl font-semibold mb-2">Unable to load orders</p>
-                <p className="text-sm text-gray-500 mb-6">{error}</p>
-            </div>
-        </div>
+        <Container maxWidth={false} sx={{ maxWidth: '64rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+            <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Unable to load orders</Typography>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>{error}</Typography>
+            </Box>
+        </Container>
     );
 
     return (
-        <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
-            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Orders</h1>
-            <div className="flex gap-4 mb-6">
-                 {/* Status filter */}
-                <label className="flex flex-col w-full md:w-auto text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Status
-                    <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="mt-1 block w-full md:w-48 rounded-xl border border-gray-300 dark:border-gray-700 
-                                bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 
-                                px-3 py-2 shadow-sm focus:outline-none focus:ring-2 
-                                focus:ring-indigo-500 dark:focus:ring-indigo-400 
-                                transition-colors"
+        <Container maxWidth={false} sx={{ maxWidth: '64rem', py: 4 }}>
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 600 }}>Orders</Typography>
+            {/* Status filter */}
+            {/* Sort selector */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 4, flexDirection: { xs: 'column', md: 'row' } }}>
+                <FormControl sx={{ minWidth: 200 }}>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                        value={statusFilter}
+                        label="Status"
+                        onChange={(e) => setStatusFilter(e.target.value)}
                     >
-                    <option value="all">All statuses</option>
-                    <option value="PROCESSING">Processing</option>
-                    <option value="SHIPPED">Shipped</option>
-                    <option value="IN TRANSIT">In Transit</option>
-                    <option value="OUT FOR DELIVERY">Out for Delivery</option>
-                    <option value="DELIVERED">Delivered</option>
-                    <option value="CANCELLED">Cancelled</option>
-                    
-                    
-                    </select>
-                </label>
+                        <MenuItem value="all">All statuses</MenuItem>
+                        <MenuItem value="PROCESSING">Processing</MenuItem>
+                        <MenuItem value="SHIPPED">Shipped</MenuItem>
+                        <MenuItem value="IN TRANSIT">In Transit</MenuItem>
+                        <MenuItem value="OUT FOR DELIVERY">Out for Delivery</MenuItem>
+                        <MenuItem value="DELIVERED">Delivered</MenuItem>
+                        <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                    </Select>
+                </FormControl>
 
-                {/* Sort selector */}
-                <label className="flex flex-col w-full md:w-auto text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Sort by:
-                    <select
-                    value={order_by}
-                    onChange={(e) => setOrderBy(e.target.value)}
-                    className="mt-1 block w-full md:w-48 rounded-xl border border-gray-300 dark:border-gray-700 
-                                bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 
-                                px-3 py-2 shadow-sm focus:outline-none focus:ring-2 
-                                focus:ring-indigo-500 dark:focus:ring-indigo-400 
-                                transition-colors"
+                <FormControl sx={{ minWidth: 200 }}>
+                    <InputLabel>Sort by</InputLabel>
+                    <Select
+                        value={order_by}
+                        label="Sort by"
+                        onChange={(e) => setOrderBy(e.target.value)}
                     >
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                    </select>
-                </label>
-            </div>
+                        <MenuItem value="newest">Newest</MenuItem>
+                        <MenuItem value="oldest">Oldest</MenuItem>
+                    </Select>
+                </FormControl>
+            </Box>
+
             {orders && orders.length > 0 ? (
-                <div className="space-y-3">
-                {orders.map((o) => (
-                    <Link to={`/order/${o.id}`} key={o.id} id={`order-${o.id ? o.id.toString() : "1"}`} className="block bg-white dark:bg-gray-900 border rounded-2xl p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{o.tracking_code}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{o.delivery_address}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-semibold text-gray-900 dark:text-white">{o.price}€</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{o.products?.length ?? 0} item{o.products?.length !== 1 ? 's' : ''}</p>
-                            </div>
-                        </div>
-                    </Link>
-                ))}
-                </div>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {orders.map((o) => (
+                        <Card
+                            key={o.id}
+                            id={`order-${o.id ? o.id.toString() : "1"}`}
+                            component={Link}
+                            to={`/order/${o.id}`}
+                            sx={{
+                                textDecoration: 'none',
+                                border: `1px solid ${theme.palette.divider}`,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                    borderColor: theme.palette.mode === 'dark' ? '#484848' : '#d0d0d0',
+                                    bgcolor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f5',
+                                    boxShadow: 2,
+                                },
+                            }}
+                        >
+                            <CardContent>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <Box>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{o.tracking_code}</Typography>
+                                        <Typography variant="body2" color="textSecondary">{o.delivery_address}</Typography>
+                                    </Box>
+                                    <Box sx={{ textAlign: 'right' }}>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{o.price}€</Typography>
+                                        <Typography variant="caption" color="textSecondary">{o.products?.length ?? 0} item{o.products?.length !== 1 ? 's' : ''}</Typography>
+                                    </Box>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </Box>
             ) : (
-                <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 border rounded-2xl">
-                    <p className="text-gray-500 dark:text-gray-400">No orders found.</p>
-                </div>
+                <Alert severity="info">No orders found.</Alert>
             )}
-        </div>
+        </Container>
     );
 }

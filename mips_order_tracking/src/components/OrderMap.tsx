@@ -7,6 +7,7 @@ import RoutingMachine from './RoutingMachine';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTruck, faMapPin } from '@fortawesome/free-solid-svg-icons';
 import { getTomTomTrafficData } from '../utils/trafficApi';
+import { Box, Card, Typography, Stack, useTheme } from '@mui/material';
 
 // Uncomment the line below to add a manual traffic delay for frontend testing
 // Comment it out to use real TomTom data
@@ -61,6 +62,7 @@ export default function OrderMap({
     onCarbonFootprintData
 }: OrderMapProps) {
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+    const theme = useTheme();
 
     const [totalDuration, setTotalDuration] = useState<number>(0);
     const [totalDistance, setTotalDistance] = useState<number>(0);
@@ -433,61 +435,31 @@ export default function OrderMap({
                 currentStatus !== 'RETURNED' && 
                 currentStatus !== 'FAILED DELIVERY' && 
                 currentStatus !== 'PROCESSING' && (
-                <div className="absolute top-4 right-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-4 min-w-[280px] z-[1000]">
-                    <div className="flex items-center gap-2 mb-3">
-                        <FontAwesomeIcon icon={faTruck} className="text-xl text-blue-600 dark:text-blue-400" />
-                        <h3 className="font-semibold text-gray-900 dark:text-white">Estimated Delivery</h3>
-                    </div>
-                    
-                    <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-600 dark:text-gray-400">Travel time:</span>
-                            <span className="font-medium text-gray-900 dark:text-white text-lg">
-                                {(() => {
-                                    const totalMinutes = Math.round(totalDuration / 60);
-                                    const days = Math.floor(totalMinutes / (24 * 60));
-                                    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
-                                    const minutes = totalMinutes % 60;
-                                    
-                                    if (days > 0) {
-                                        return `~${days}d ${hours}h`;
-                                    } else if (hours > 0) {
-                                        return `~${hours}h ${minutes}min`;
-                                    } else {
-                                        return `~${minutes}min`;
-                                    }
-                                })()}
-                            </span>
-                        </div>
+                <Card
+                    sx={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        zIndex: 1000,
+                        minWidth: 280,
+                        p: 2,
+                    }}
+                >
+                    <Stack gap={2}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <FontAwesomeIcon icon={faTruck} style={{ fontSize: '1.25rem', color: theme.palette.primary.main }} />
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>Estimated Delivery</Typography>
+                        </Box>
                         
-                        {estimatedTrafficDelay > 0 && (
-                            <div className="flex justify-between items-center">
-                                <span className="text-orange-600 dark:text-orange-400 text-xs">+ Traffic delay:</span>
-                                <span className="font-medium text-orange-600 dark:text-orange-400">
+                        <Stack gap={1.5}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="body2" color="textSecondary">Travel time:</Typography>
+                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                     {(() => {
-                                        const delayMinutes = Math.round(estimatedTrafficDelay / 60);
-                                        const hours = Math.floor(delayMinutes / 60);
-                                        const minutes = delayMinutes % 60;
-                                        
-                                        if (hours > 0) {
-                                            return `~${hours}h ${minutes}min`;
-                                        } else {
-                                            return `~${minutes}min`;
-                                        }
-                                    })()}
-                                </span>
-                            </div>
-                        )}
-                        
-                        {estimatedTrafficDelay > 0 && (
-                            <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
-                                <span className="text-gray-900 dark:text-white font-semibold">Total with traffic:</span>
-                                <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">
-                                    {(() => {
-                                        const totalWithTraffic = Math.round((totalDuration + estimatedTrafficDelay) / 60);
-                                        const days = Math.floor(totalWithTraffic / (24 * 60));
-                                        const hours = Math.floor((totalWithTraffic % (24 * 60)) / 60);
-                                        const minutes = totalWithTraffic % 60;
+                                        const totalMinutes = Math.round(totalDuration / 60);
+                                        const days = Math.floor(totalMinutes / (24 * 60));
+                                        const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+                                        const minutes = totalMinutes % 60;
                                         
                                         if (days > 0) {
                                             return `~${days}d ${hours}h`;
@@ -497,24 +469,69 @@ export default function OrderMap({
                                             return `~${minutes}min`;
                                         }
                                     })()}
-                                </span>
-                            </div>
-                        )}
-                        
-                        <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
-                            <span className="text-gray-600 dark:text-gray-400">Distance:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">
-                                {(totalDistance / 1000).toFixed(1)} km
-                            </span>
-                        </div>
-                        
-                        <p className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
-                            {estimatedTrafficDelay > 0 
-                                ? 'Includes real-time traffic delays' 
-                                : 'Includes real-time traffic (no delays detected)'}
-                        </p>
-                    </div>
-                </div>
+                                </Typography>
+                            </Box>
+                            
+                            {estimatedTrafficDelay > 0 && (
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="caption" sx={{ color: theme.palette.warning.main }}>+ Traffic delay:</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.warning.main }}>
+                                        {(() => {
+                                            const delayMinutes = Math.round(estimatedTrafficDelay / 60);
+                                            const hours = Math.floor(delayMinutes / 60);
+                                            const minutes = delayMinutes % 60;
+                                            
+                                            if (hours > 0) {
+                                                return `~${hours}h ${minutes}min`;
+                                            } else {
+                                                return `~${minutes}min`;
+                                            }
+                                        })()}
+                                    </Typography>
+                                </Box>
+                            )}
+                            
+                            {estimatedTrafficDelay > 0 && (
+                                <Box sx={{ pt: 1, borderTop: `1px solid ${theme.palette.divider}` }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Total with traffic:</Typography>
+                                        <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+                                            {(() => {
+                                                const totalWithTraffic = Math.round((totalDuration + estimatedTrafficDelay) / 60);
+                                                const days = Math.floor(totalWithTraffic / (24 * 60));
+                                                const hours = Math.floor((totalWithTraffic % (24 * 60)) / 60);
+                                                const minutes = totalWithTraffic % 60;
+                                                
+                                                if (days > 0) {
+                                                    return `~${days}d ${hours}h`;
+                                                } else if (hours > 0) {
+                                                    return `~${hours}h ${minutes}min`;
+                                                } else {
+                                                    return `~${minutes}min`;
+                                                }
+                                            })()}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            )}
+                            
+                            <Box sx={{ pt: 1, borderTop: `1px solid ${theme.palette.divider}` }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="body2" color="textSecondary">Distance:</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                        {(totalDistance / 1000).toFixed(1)} km
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            
+                            <Typography variant="caption" color="textSecondary" sx={{ pt: 1, borderTop: `1px solid ${theme.palette.divider}`, display: 'block', textAlign: 'center' }}>
+                                {estimatedTrafficDelay > 0 
+                                    ? 'Includes real-time traffic delays' 
+                                    : 'Includes real-time traffic (no delays detected)'}
+                            </Typography>
+                        </Stack>
+                    </Stack>
+                </Card>
             )}
         </div>
     );

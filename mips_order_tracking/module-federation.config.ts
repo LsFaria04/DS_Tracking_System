@@ -22,6 +22,10 @@ export default createModuleFederationConfig({
       shareKey: 'react-dom',
       shareScope: 'default'
     },
+    '@emotion/react': {
+      singleton: true,
+      requiredVersion: '^11.0.0',
+    },
     'react-router-dom': { 
       singleton: true,
       eager: true
