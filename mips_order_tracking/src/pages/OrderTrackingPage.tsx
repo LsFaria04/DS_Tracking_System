@@ -8,6 +8,18 @@ import UpdateModal from "../components/UpdateModal";
 import getCoordinatesFromAddress from "../utils/address_coordinates";
 import '../index.css';
 import OrderMap from '../components/OrderMap';
+import {
+  Container,
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Alert,
+  CircularProgress,
+  Skeleton,
+  Divider,
+} from '@mui/material';
 
 export default function OrderPage() {
     const { id } = useParams<{ id: string }>(); 
@@ -217,6 +229,12 @@ export default function OrderPage() {
                         }
                     : prev
                 );
+
+                // Close modal after successful update
+                setTimeout(() => {
+                    setUpdateModal(false);
+                    setAddress("");
+                }, 1500); // Delay to show success message
                 
             }
         } catch (error) {
@@ -231,101 +249,103 @@ export default function OrderPage() {
 
 
     if (loading) return (
-        <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
+        <Container maxWidth={false} sx={{ maxWidth: '64rem', py: 4 }}>
             {/* Map skeleton */}
-            <div className="w-full h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse"></div>
+            <Box sx={{ mb: 3, height: 384, bgcolor: 'action.hover', borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CircularProgress />
+            </Box>
             
             {/* Header skeleton */}
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <div className="flex flex-col md:flex-row md:justify-between gap-6">
-                    <div className="flex-1 space-y-4">
-                        <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded-lg w-48 animate-pulse"></div>
-                        <div className="space-y-2">
-                            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-64 animate-pulse"></div>
-                            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-64 animate-pulse"></div>
-                            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-96 animate-pulse"></div>
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-4 min-w-[200px]">
-                        <div className="h-16 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
-                        <div className="h-20 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
-                    </div>
-                </div>
-            </div>
+            <Card sx={{ mb: 3 }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', gap: 6, mb: 6 }}>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <Skeleton variant="text" width="40%" height={40} />
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Skeleton variant="text" width="80%" />
+                                <Skeleton variant="text" width="70%" />
+                                <Skeleton variant="text" width="90%" />
+                            </Box>
+                        </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: { md: '200px' } }}>
+                            <Skeleton variant="rectangular" height={40} width="100%" />
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+                                <Skeleton variant="text" width="60%" height={24} />
+                                <Skeleton variant="text" width="100%" height={40} />
+                            </Box>
+                        </Box>
+                    </Box>
+                </CardContent>
+            </Card>
             
             {/* Products skeleton */}
-            <div>
-                <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-32 mb-6 animate-pulse"></div>
-                <div className="space-y-3">
-                    {[1, 2].map(i => (
-                        <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-                            <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-4 animate-pulse"></div>
-                            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-32 animate-pulse"></div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+                <Skeleton width="30%" />
+            </Typography>
+            <Box sx={{ space: 2, mb: 3 }}>
+                {[1, 2].map(i => (
+                    <Card key={i}>
+                        <CardContent>
+                            <Skeleton variant="text" width="50%" height={24} sx={{ mb: 1 }} />
+                            <Skeleton variant="text" width="40%" />
+                        </CardContent>
+                    </Card>
+                ))}
+            </Box>
             
             {/* Tracking history skeleton */}
-            <div>
-                <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-40 mb-6 animate-pulse"></div>
-                <div className="space-y-0">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="relative flex pb-6">
-                            <div className="relative flex flex-col items-center w-12 shrink-0">
-                                <div className="w-4 h-4 bg-gray-300 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                                {i < 3 && <div className="w-0.5 flex-1 bg-gray-300 dark:bg-gray-700"></div>}
-                            </div>
-                            <div className="flex-1">
-                                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-                                    <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-32 mb-3 animate-pulse"></div>
-                                    <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-64 mb-2 animate-pulse"></div>
-                                    <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-48 animate-pulse"></div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+                <Skeleton width="30%" />
+            </Typography>
+            <Box>
+                {[1, 2, 3].map(i => (
+                    <Card key={i} sx={{ mb: 2 }}>
+                        <CardContent>
+                            <Skeleton variant="text" width="40%" height={24} sx={{ mb: 1 }} />
+                            <Skeleton variant="text" width="80%" />
+                            <Skeleton variant="text" width="60%" />
+                        </CardContent>
+                    </Card>
+                ))}
+            </Box>
+        </Container>
     );
     
     if (error) return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6">
-            <div className="text-center max-w-md">
-                <p className="text-6xl mb-4"></p>
-                <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Unable to load order</p>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">{error}</p>
-                <button
+        <Container maxWidth="sm" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+            <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Unable to load order</Typography>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>{error}</Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
                     onClick={() => window.location.reload()}
-                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
                 >
                     Try Again
-                </button>
-            </div>
-        </div>
+                </Button>
+            </Box>
+        </Container>
     );
     
     if (!order) return (
-        <div className="min-h-screen flex flex-col items-center justify-center">
-            <div className="text-center">
-                <p className="text-6xl mb-4"></p>
-                <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Order not found</p>
-                <p className="text-gray-500 dark:text-gray-400">The order you&apos;re looking for doesn&apos;t exist or has been removed.</p>
-            </div>
-        </div>
+        <Container maxWidth="sm" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+            <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Order not found</Typography>
+                <Typography variant="body2" color="textSecondary">The order you&apos;re looking for doesn&apos;t exist or has been removed.</Typography>
+            </Box>
+        </Container>
     );
 
 
     return (
-        <div className="max-w-5xl mx-auto p-6 md:p-8 space-y-6">
+        <Container maxWidth={false} sx={{ maxWidth: '64rem', py: 4 }}>
             {/* Map */}
-            <section>
-                {/* 5. Wrapped lazy component in <Suspense> */}
+            {/* Wrapped lazy component in <Suspense> */}
+            <Box sx={{ mb: 3 }}>
                 <Suspense fallback={
-                    <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <p className="text-gray-500">Loading map...</p>
-                    </div>
+                    <Box sx={{ width: '100%', height: 384, bgcolor: 'action.hover', borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CircularProgress />
+                    </Box>
                 }>
                     {orderHistory && (
                         <OrderMap
@@ -340,142 +360,172 @@ export default function OrderPage() {
                         />
                     )}
                 </Suspense>
-            </section>
+            </Box>
 
             {/* Carbon Footprint */}
             {carbonFootprint && (
-                <section>
+                <Box sx={{ mb: 3 }}>
                     <CarbonFootprint data={carbonFootprint} />
-                </section>
+                </Box>
             )}
 
             {/* Header */}
-            <header className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
-                    <div className="flex-1 space-y-4 ">
-                        <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Order {id}</h1>
-                        <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-3">
-                                <span className="text-gray-500 dark:text-gray-400 w-28">Ordered</span>
-                                <span className="text-gray-900 dark:text-white">{new Date(order.created_at).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className="text-gray-500 dark:text-gray-400 w-28">Est. Delivery</span>
-                                <span className="text-gray-900 dark:text-white">{new Date(order.delivery_estimate).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-start gap-3">
-                                <span className="text-gray-500 dark:text-gray-400 w-28">Delivery To</span>
-                                <span className="text-gray-900 dark:text-white">{order.delivery_address}</span>
-                            </div>
-                             
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-start md:items-end gap-4 min-w-[200px]">
-                        <div className="text-right w-full">
-                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tracking Code</p>
-                            <p className="text-base font-mono font-medium text-gray-900 dark:text-white">{order.tracking_code}</p>
-                        </div>
-                        <div className="text-right w-full pt-4 border-t border-gray-200 dark:border-gray-800">
-                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total</p>
-                            <p className="text-3xl font-semibold text-gray-900 dark:text-white">{order.price}€</p>
-                        </div>
-                        
-                        
-                    </div>
-                    
-                </div>
-                <div className="flex flex-col md:flex-row justify-between gap-4 mt-6">
-                                                <button
-                                                    onClick={() => setUpdateModal(true)}
-                                                    id = "update"
-                                                    disabled={showUpdateModal}
-                                                    className="w-full md:w-auto md:min-w-[200px] mt-4 px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                                    >
-                                    Update Order
-                        </button>
+            <Card sx={{ mb: 3 }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', gap: 6, mb: 6 }}>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <Typography variant="h4" sx={{ fontWeight: 600 }}>Order {id}</Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Box sx={{ display: 'flex', gap: 3 }}>
+                                    <Typography variant="body2" color="textSecondary" sx={{ minWidth: 100 }}>Ordered</Typography>
+                                    <Typography variant="body2">{new Date(order.created_at).toLocaleDateString()}</Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 3 }}>
+                                    <Typography variant="body2" color="textSecondary" sx={{ minWidth: 100 }}>Est. Delivery</Typography>
+                                    <Typography variant="body2">{new Date(order.delivery_estimate).toLocaleDateString()}</Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 3 }}>
+                                    <Typography variant="body2" color="textSecondary" sx={{ minWidth: 100 }}>Delivery To</Typography>
+                                    <Typography variant="body2">{order.delivery_address}</Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: { md: '200px' } }}>
+                            <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
+                                <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 1, textTransform: 'uppercase', letterSpacing: 1 }}>Tracking Code</Typography>
+                                <Typography variant="body1" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>{order.tracking_code}</Typography>
+                            </Box>
+                            <Box sx={{ textAlign: { xs: 'left', md: 'right' }, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+                                <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 1, textTransform: 'uppercase', letterSpacing: 1 }}>Total</Typography>
+                                <Typography variant="h5" sx={{ fontWeight: 600 }}>{order.price}€</Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 4, flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', mt: 6 }}>
+                        <Button
+                            onClick={() => setUpdateModal(true)}
+                            id="update"
+                            disabled={showUpdateModal}
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            sx={{ width: { xs: '100%', md: 'auto' }, minWidth: { md: '200px' }, px: 4, py: 1, maxHeight: 40, mt: 1, fontSize: '0.875rem', fontWeight: 500, textTransform: 'none' }}
+                        >
+                            Update Address
+                        </Button>
                         {/* Blockchain Verification */}
-                        <div className="w-full md:min-w-[200px] md:max-w-20 pt-4 md:pt-0 md:border-t-0 border-gray-200 dark:border-gray-800">
-                            <button
+                        <Box sx={{ width: { xs: '100%', md: 'auto' }, minWidth: { md: '200px' }, maxWidth: { md: 80 } }}>
+                            <Button
                                 onClick={handleVerifyBlockchain}
-                                id = "verification"
+                                id="verification"
                                 disabled={verifying}
-                                className="w-full px-4 py-2 max-h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                variant="contained"
+                                color="primary"
+                                size="small"
+                                fullWidth
+                                sx={{ px: 4, py: 1, maxHeight: 40, fontSize: '0.875rem', fontWeight: 500, textTransform: 'none', whiteSpace: 'nowrap' }}
                             >
                                 {verifying ? (
-                                    <>
-                                        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <CircularProgress size={16} color="inherit" />
                                         Verifying...
-                                    </>
+                                    </Box>
                                 ) : (
                                     'Verify on Blockchain'
                                 )}
-                            </button>
+                            </Button>
                             
                             {verificationResult && (
-                                <div className={`mt-3 p-3 rounded-lg text-sm ${
-                                    verificationResult.status === 'VERIFIED' 
-                                        ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-                                        : verificationResult.status === 'ERROR'
-                                        ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-                                        : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
-                                }`}>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className={`font-semibold ${
-                                            verificationResult.status === 'VERIFIED'
-                                                ? 'text-green-700 dark:text-green-300'
-                                                : verificationResult.status === 'ERROR'
-                                                ? 'text-red-700 dark:text-red-300'
-                                                : 'text-orange-700 dark:text-orange-300'
-                                        }`}>
+                                <Box sx={{
+                                    mt: 1.5,
+                                    p: 1.5,
+                                    borderRadius: 1,
+                                    border: '1px solid',
+                                    ...(verificationResult.status === 'VERIFIED' ? {
+                                        bgcolor: 'rgba(76, 175, 80, 0.05)',
+                                        borderColor: 'rgb(129, 199, 132)',
+                                    } : verificationResult.status === 'ERROR' ? {
+                                        bgcolor: 'rgba(244, 67, 54, 0.05)',
+                                        borderColor: 'rgb(229, 119, 114)',
+                                    } : {
+                                        bgcolor: 'rgba(255, 152, 0, 0.05)',
+                                        borderColor: 'rgb(255, 167, 38)',
+                                    })
+                                }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+                                        <Typography variant="subtitle2" sx={{
+                                            fontWeight: 600,
+                                            ...(verificationResult.status === 'VERIFIED' ? {
+                                                color: '#2e7d32',
+                                            } : verificationResult.status === 'ERROR' ? {
+                                                color: '#c62828',
+                                            } : {
+                                                color: '#e65100',
+                                            })
+                                        }}>
                                             {verificationResult.status.replace('_', ' ')}
-                                        </span>
-                                    </div>
-                                    <p className={`text-xs ${
-                                        verificationResult.status === 'VERIFIED'
-                                            ? 'text-green-600 dark:text-green-400'
-                                            : verificationResult.status === 'ERROR'
-                                            ? 'text-red-600 dark:text-red-400'
-                                            : 'text-orange-600 dark:text-orange-400'
-                                    }`}>
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="caption" sx={{
+                                        display: 'block',
+                                        mb: 0.75,
+                                        ...(verificationResult.status === 'VERIFIED' ? {
+                                            color: '#558b2f',
+                                        } : verificationResult.status === 'ERROR' ? {
+                                            color: '#b71c1c',
+                                        } : {
+                                            color: '#bf360c',
+                                        })
+                                    }}>
                                         {verificationResult.message}
-                                    </p>
+                                    </Typography>
                                     {verificationResult.status !== 'ERROR' && (
                                         <>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                                            <Typography variant="caption" sx={{
+                                                display: 'block',
+                                                mb: 0.75,
+                                                mt: 1,
+                                                color: 'text.secondary'
+                                            }}>
                                                 {verificationResult.verified_updates}/{verificationResult.total_updates} updates verified
-                                            </p>
+                                            </Typography>
                                             {verificationResult.contract_address && (
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 wrap-break-word">
-                                                    <span className="font-medium">Contract:</span> {verificationResult.contract_address}
-                                                </p>
+                                                <Typography variant="caption" sx={{
+                                                    display: 'block',
+                                                    mb: 0.75,
+                                                    mt: 0.5,
+                                                    wordBreak: 'break-word',
+                                                    color: 'text.secondary'
+                                                }}>
+                                                    <strong>Contract:</strong> {verificationResult.contract_address}
+                                                </Typography>
                                             )}
                                             {verificationResult.transaction_hashes && verificationResult.transaction_hashes.length > 0 && (
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 ">
-                                                    <span className="font-medium">✓</span> Blockchain links shown in tracking history below
-                                                </p>
+                                                <Typography variant="caption" sx={{
+                                                    display: 'block',
+                                                    mt: 1,
+                                                    color: 'text.secondary'
+                                                }}>
+                                                    ✓ Blockchain links shown in tracking history below
+                                                </Typography>
                                             )}
                                         </>
                                     )}
-                                </div>
+                                </Box>
                             )}
-                        </div>
-                </div>
-            </header>
+                        </Box>
+                    </Box>
+                </CardContent>
+            </Card>
 
             {/*Modal for to update the order information*/ }
             <UpdateModal show={showUpdateModal} onClose={() => setUpdateModal(false)} isUpdating={isUpdating} onUpdate={handleOrderUpdate}>
-                 <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Update Delivery Address</h2>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Update Delivery Address</Typography>
                    {/* Feedback message injected as children */}
                     {statusMessage && (
-                        <div
-                        className={`mb-4 p-3 rounded-lg text-sm ${
-                            statusType === "success"
-                            ? "bg-green-50 text-green-700 border border-green-200"
-                            : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
-                        >
-                        {statusMessage}
-                        </div>
+                        <Alert severity={statusType === "success" ? "success" : "error"} sx={{ mb: 2 }}>
+                            {statusMessage}
+                        </Alert>
                     )}
                     {/* Text box for delivery address */}
                     <input
@@ -489,164 +539,176 @@ export default function OrderPage() {
             </UpdateModal>
 
             {/* Products */}
-            <section>
-                <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Order Items</h2>
+            <Box sx={{ mb: 6 }}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Order Items</Typography>
                 {order.products && order.products.length > 0 ? (
-                    <div className="space-y-3">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {order.products.map((p, idx) => (
-                            <div key={p.product_id || idx} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
-                                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">{p.name}</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            Product ID: {p.product_id}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xl font-semibold text-gray-900 dark:text-white">{p.price}€</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">per unit</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="mt-4 flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-800">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">Quantity</span>
-                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {p.quantity}
-                                        </span>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">Subtotal</span>
-                                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{(p.price * p.quantity).toFixed(2)}€</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <Card key={p.product_id || idx}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>{p.name}</Typography>
+                                            <Typography variant="caption" color="textSecondary">Product ID: {p.product_id}</Typography>
+                                        </Box>
+                                        <Box sx={{ textAlign: 'right' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, justifyContent: 'flex-end' }}>
+                                                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.25rem' }}>{p.price}€</Typography>
+                                            </Box>
+                                            <Typography variant="caption" color="textSecondary">per unit</Typography>
+                                        </Box>
+                                    </Box>
+                                    <Divider sx={{ my: 2 }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                            <Typography variant="caption" color="textSecondary">Quantity:</Typography>
+                                            <Typography variant="caption" sx={{ fontWeight: 600 }}>{p.quantity}</Typography>
+                                        </Box>
+                                        <Box sx={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'flex-end' }}>
+                                            <Typography variant="caption" color="textSecondary">Subtotal:</Typography>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.125rem' }}>{(p.price * p.quantity).toFixed(2)}€</Typography>
+                                        </Box>
+                                    </Box>
+                                </CardContent>
+                            </Card>
                         ))}
                         
                         {/* Total summary */}
-                        <div className="mt-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white">Total</p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{order.products.length} item{order.products.length !== 1 ? 's' : ''}</p>
-                                </div>
-                                <p className="text-3xl font-semibold text-gray-900 dark:text-white">
-                                    {order.price}€
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                        <Card sx={{ bgcolor: 'action.hover' }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Box>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Total</Typography>
+                                        <Typography variant="caption" color="textSecondary">{order.products.length} item{order.products.length !== 1 ? 's' : ''}</Typography>
+                                    </Box>
+                                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                                        {order.price}€
+                                    </Typography>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Box>
                 ) : (
-                    <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl">
-                        <p className="text-gray-500 dark:text-gray-400">No products in this order.</p>
-                    </div>
+                    <Alert severity="info">No products in this order.</Alert>
                 )}
-            </section>
+            </Box>
 
             {/* Tracking Steps */}
-            <section>
-                <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Tracking History</h2>
+            <Box>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Tracking History</Typography>
                 {orderHistory && orderHistory.length > 0 ? (
-                    <ul className="space-y-0">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                         {orderHistory.map((s, idx) => {
                             const isFirst = idx === 0;
                             const isLast = idx === orderHistory.length - 1;
                             
-                            // Define status colors
-                            const statusInfo = {
-                                'PROCESSING': { color: 'bg-blue-500', border: 'border-blue-500' },
-                                'SHIPPED': { color: 'bg-blue-500', border: 'border-blue-5POST-t-t' },
-                                'IN TRANSIT': { color: 'bg-blue-500', border: 'border-blue-500' },
-                                'OUT FOR DELIVERY': { color: 'bg-blue-500', border: 'border-blue-500' },
-                                'DELIVERED': { color: 'bg-green-500', border: 'border-green-500' },
-                                'CANCELLED': { color: 'bg-red-500', border: 'border-red-500' },
-                                'RETURNED': { color: 'bg-orange-500', border: 'border-orange-500' },
-                                'FAILED DELIVERY': { color: 'bg-red-500', border: 'border-red-500' }
+                            // Define status colors using theme
+                            const statusInfo: Record<string, { color: string; severity: 'info' | 'success' | 'warning' | 'error' }> = {
+                                'PROCESSING': { color: '#1976d2', severity: 'info' },
+                                'SHIPPED': { color: '#1976d2', severity: 'info' },
+                                'IN TRANSIT': { color: '#1976d2', severity: 'info' },
+                                'OUT FOR DELIVERY': { color: '#1976d2', severity: 'info' },
+                                'DELIVERED': { color: '#388e3c', severity: 'success' },
+                                'CANCELLED': { color: '#d32f2f', severity: 'error' },
+                                'RETURNED': { color: '#f57c00', severity: 'warning' },
+                                'FAILED DELIVERY': { color: '#d32f2f', severity: 'error' }
                             };
                             
-                            const status = statusInfo[s.order_status as keyof typeof statusInfo] || { 
-                                color: 'bg-gray-400',
-                                border: 'border-gray-400'
-                            };
+                            const status = statusInfo[s.order_status] || { color: '#9e9e9e', severity: 'info' as const };
                             
                             // Get the blockchain transaction hash for this status update
-                            // Transaction hashes align with the order returned by the verification API
-                            // (same index as the orderHistory entries shown), so use the same index
                             const txHash = verificationResult?.transaction_hashes?.[idx];
                             
                             return (
-                                <li key={idx} className="relative flex">
+                                <Box key={idx} sx={{ display: 'flex', mb: isLast ? 0 : 0, alignItems: 'stretch' }}>
                                     {/* Left timeline column */}
-                                    <div className="relative flex flex-col items-center w-12 shrink-0">
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 48, flexShrink: 0 }}>
                                         {/* Top connecting line - only if not first */}
                                         {!isFirst && (
-                                            <div className="w-0.5 h-6 bg-gray-300 dark:bg-gray-700"></div>
+                                            <Box sx={{ width: 2, height: 24, bgcolor: 'divider' }} />
                                         )}
                                         
-                                        {/* The dot - larger for the last (current state) one */}
-                                        <div className={`${status.color} rounded-full ${isFirst ? 'w-8 h-8' : 'w-6 h-6'} shrink-0 border-4 border-white dark:border-gray-950`}></div>
+                                        {/* The dot - larger for the first (current state) one */}
+                                        <Box
+                                            sx={{
+                                                width: isFirst ? 32 : 24,
+                                                height: isFirst ? 32 : 24,
+                                                borderRadius: '50%',
+                                                bgcolor: status.color,
+                                                flexShrink: 0,
+                                                border: 4,
+                                                borderColor: 'background.paper',
+                                            }}
+                                        />
                                         
                                         {/* Bottom connecting line - only if not last */}
                                         {!isLast && (
-                                            <div className="w-0.5 flex-1 bg-gray-300 dark:bg-gray-700"></div>
+                                            <Box sx={{ width: 2, flex: 1, minHeight: 24, bgcolor: 'divider' }} />
                                         )}
-                                    </div>
+                                    </Box>
                                     
                                     {/* Content card */}
-                                    <div className={`flex-1 pb-6 ${isLast ? 'pb-0' : ''}`}>
-                                        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <h3 className="font-semibold text-base text-gray-900 dark:text-white">{s.order_status}</h3>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-4">
-                                                    {new Date(s.timestamp).toLocaleString()}
-                                                </span>
-                                            </div>
-                                            
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{s.note}</p>
-                                            
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                {s.order_location}
-                                            </div>
-                                            
-                                            {s.Storage && (
-                                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
-                                                    <div className="text-sm">
-                                                        <p className="font-medium text-gray-900 dark:text-white">{s.Storage.Name}</p>
-                                                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">{s.Storage.Address}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            
-                                            {/* Blockchain verification link */}
-                                            {txHash && (
-                                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-medium text-green-600 dark:text-green-400">Verified on Blockchain</span>
-                                                    </div>
-                                                    <a
-                                                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        id = {`link-${idx}`}
-                                                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-mono break-all mt-1 block"
-                                                        title="View transaction on Etherscan"
-                                                    >
-                                                        {txHash}
-                                                    </a>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </li>
+                                    <Box sx={{ flex: 1, pb: isLast ? 0 : 2, pl: 2 }}>
+                                        <Card>
+                                            <CardContent>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{s.order_status}</Typography>
+                                                    <Typography variant="caption" color="textSecondary" sx={{ whiteSpace: 'nowrap', ml: 2 }}>
+                                                        {new Date(s.timestamp).toLocaleString()}
+                                                    </Typography>
+                                                </Box>
+                                                
+                                                <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>{s.note}</Typography>
+                                                
+                                                <Typography variant="body2" color="textSecondary">
+                                                    {s.order_location}
+                                                </Typography>
+                                                
+                                                {s.Storage && (
+                                                    <>
+                                                        <Divider sx={{ my: 1.5 }} />
+                                                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>{s.Storage.Name}</Typography>
+                                                        <Typography variant="caption" color="textSecondary">{s.Storage.Address}</Typography>
+                                                    </>
+                                                )}
+                                                
+                                                {/* Blockchain verification link */}
+                                                {txHash && (
+                                                    <>
+                                                        <Divider sx={{ my: 1.5 }} />
+                                                        <Typography variant="caption" sx={{ display: 'block', color: 'success.main', fontWeight: 600, mb: 0.5 }}>✓ Verified on Blockchain</Typography>
+                                                        <Typography
+                                                            component="a"
+                                                            href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            id={`link-${idx}`}
+                                                            variant="caption"
+                                                            sx={{
+                                                                display: 'block',
+                                                                color: 'primary.main',
+                                                                textDecoration: 'none',
+                                                                '&:hover': { textDecoration: 'underline' },
+                                                                fontFamily: 'monospace',
+                                                                wordBreak: 'break-all',
+                                                            }}
+                                                            title="View transaction on Etherscan"
+                                                        >
+                                                            {txHash}
+                                                        </Typography>
+                                                    </>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    </Box>
+                                </Box>
                             );
                         })}
-                    </ul>
+                    </Box>
                 ) : (
-                    <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl">
-                        <p className="text-gray-500 dark:text-gray-400">No tracking history available yet.</p>
-                    </div>
+                    <Alert severity="info">No tracking history available yet.</Alert>
                 )}
-            </section>
-        </div>
+            </Box>
+        </Container>
     );
 }
