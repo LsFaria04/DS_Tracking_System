@@ -10,11 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//helpers to make the tests easier
+var NewClient = blockchain.NewClient
+var DeployContract = blockchain.DeployContract
+
 type BlockchainHandler struct{}
 
 // GetBlockchainStatus returns the current blockchain connection status
 func (h *BlockchainHandler) GetBlockchainStatus(c *gin.Context) {
-	client, err := blockchain.NewClient()
+	client, err := NewClient()
 	if err != nil {
 		c.JSON(http.StatusOK, requestModels.BlockchainStatusResponse{
 			Connected: false,
@@ -52,7 +56,7 @@ func (h *BlockchainHandler) GetBlockchainStatus(c *gin.Context) {
 }
 
 func (h *BlockchainHandler) DeployContract(c *gin.Context){
-	address, err := blockchain.DeployContract()
+	address, err := DeployContract()
 
 	if err != nil {
 		c.JSON(
