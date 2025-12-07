@@ -11,8 +11,6 @@ import (
     "testing"
 )
 
-// Dummy blockchain client for testing
-type dummyClient struct{}
 
 func TestConfigBlockChainClient_NoRPCURL(t *testing.T) {
     os.Setenv("BLOCKCHAIN_RPC_URL", "")
