@@ -1,5 +1,6 @@
 package main
 
+
 import (
 	"app/blockchain"
 	"app/routes"
@@ -96,6 +97,7 @@ func configRouter(db *gorm.DB) (*gin.Engine, *blockchain.Client, error) {
 	return router, blockChainClient, nil
 }
 
+
 func main() {
 	db, err := configDB()
 
@@ -104,7 +106,7 @@ func main() {
 		return
 	}
 
-	router, _, err := configRouter(db)
+	router, blockChainClient, err := configRouter(db)
 
 	if err != nil {
 		log.Printf("Error while configuring the routing: %v", err)
@@ -112,9 +114,9 @@ func main() {
 	}
 
 	// Create and start the Pub/Sub client
-    //ctx := context.Background()
+    ctx := context.Background()
 
-	/*
+	
 	// Configure Pub/Sub client and subscriptions 
     client, subs, err := configPubSubClient(db, blockChainClient, []string{"orders_status", "checkout_orders"}, []string{"order_status-sub", "checkout_orders-sub"})
 
@@ -143,7 +145,8 @@ func main() {
 
 		pubsub.TestOrdersPubSub()  // Uncomment to test order publishing
     }
-	*/
+
 
 	router.Run(":8080") // listens on 0.0.0.0:8080 by default
 }
+
