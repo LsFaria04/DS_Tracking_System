@@ -11,3 +11,8 @@ provider "google" {
   project = var.project_id
   region  = var.region
 }
+
+# Get project details for service account references
+data "google_project" "project" {
+  project_id = var.project_id
+}
