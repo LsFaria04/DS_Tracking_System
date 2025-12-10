@@ -1,5 +1,6 @@
 package main
 
+
 import (
 	"app/blockchain"
 	"app/routes"
@@ -96,6 +97,7 @@ func configRouter(db *gorm.DB) (*gin.Engine, *blockchain.Client, error) {
 	return router, blockChainClient, nil
 }
 
+
 func main() {
 	db, err := configDB()
 
@@ -114,6 +116,7 @@ func main() {
 	// Create and start the Pub/Sub client
     ctx := context.Background()
 
+	
 	// Configure Pub/Sub client and subscriptions 
     client, subs, err := configPubSubClient(db, blockChainClient, []string{}, []string{}) // Empty topic and subscription IDs since they are not created yet by the checkout team
 
@@ -151,5 +154,7 @@ func main() {
     }
 	
 
+
 	router.Run(":8080") // listens on 0.0.0.0:8080 by default
 }
+

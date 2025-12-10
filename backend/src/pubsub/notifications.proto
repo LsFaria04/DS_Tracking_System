@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = ".";
+package notifications;
+
+message NotificationRequest {
+  string user_id = 1;
+  string type = 2;
+  string title = 3;
+  string payload = 4;
+  string hyperlink = 5;
+  string created_at = 6;
+}
+

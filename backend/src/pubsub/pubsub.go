@@ -14,11 +14,35 @@ import (
 	"time"
     "encoding/json"
 
+    "google.golang.org/protobuf/proto"
 	"cloud.google.com/go/pubsub"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/api/option"
 	"gorm.io/gorm"
 )
+
+// Topic interface for Pub/Sub operations
+type Topic interface {
+	Publish(ctx context.Context, msg *pubsub.Message) *pubsub.PublishResult
+	Exists(ctx context.Context) (bool, error)
+	Delete(ctx context.Context) error
+}
+
+// Subscription interface for Pub/Sub operations
+type Subscription interface {
+	Receive(ctx context.Context, f func(context.Context, *pubsub.Message)) error
+	Exists(ctx context.Context) (bool, error)
+	Delete(ctx context.Context) error
+}
+
+// PubSubClient interface defines the interface for Pub/Sub operations
+type PubSubClient interface {
+	Topic(id string) *pubsub.Topic
+	Subscription(id string) *pubsub.Subscription
+	CreateTopic(ctx context.Context, id string) (*pubsub.Topic, error)
+	CreateSubscription(ctx context.Context, id string, cfg pubsub.SubscriptionConfig) (*pubsub.Subscription, error)
+	Close() error
+}
 
 // Initializes pubsub client
 func StartPubSubClient(ctx context.Context, db *gorm.DB, blockChainClient *blockchain.Client) (*pubsub.Client, error) {
@@ -55,6 +79,16 @@ func StartPubSubClient(ctx context.Context, db *gorm.DB, blockChainClient *block
 }
 
 func CreateTopicWithID(ctx context.Context, client *pubsub.Client, topicID string) (*pubsub.Topic, error) {
+    
+    if client == nil {
+        log.Printf("Failed to create topic: client is nil")
+        return nil, fmt.Errorf("pubsub client is nil")
+    }
+    
+    if topicID == "" {
+        log.Printf("Failed to create topic: topicID is empty")
+        return nil, fmt.Errorf("topicID is empty")
+    }
 
     // Get or create topic
     topic := client.Topic(topicID)
@@ -83,6 +117,21 @@ func CreateTopicWithID(ctx context.Context, client *pubsub.Client, topicID strin
 
 
 func SubscribeClient(ctx context.Context, client *pubsub.Client, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
+
+    if client == nil {
+        log.Printf("Failed to create subscription: client is nil")
+        return nil, fmt.Errorf("pubsub client is nil")
+    }
+    
+    if topicID == "" {
+        log.Printf("Failed to create subscription: topicID is empty")
+        return nil, fmt.Errorf("topicID is empty")
+    }
+    
+    if subscriptionID == "" {
+        log.Printf("Failed to create subscription: subscriptionID is empty")
+        return nil, fmt.Errorf("subscriptionID is empty")
+    }
 
     // Ensure topic exists
     topic, err := CreateTopicWithID(ctx, client, topicID)
@@ -133,11 +182,22 @@ func PublishNotification(ctx context.Context, client *pubsub.Client, notificatio
     }
 
     log.Printf("Published notification with message ID: %s", id)
-    log.Printf("Notification payload: %s", string(notification))
+
+    messageNotification := &NotificationRequest{}
+    if err := proto.Unmarshal(notification, messageNotification); err != nil {
+        log.Printf("Failed to unmarshal notification for logging: %v", err)
+        return nil
+    }
+    log.Printf("Notification payload: %v", messageNotification)
     return nil
 }
 
 func buildNotificationPayloadOrder(messageData []byte, db *gorm.DB, blockChainClient *blockchain.Client) []byte {
+
+    if messageData == nil || len(messageData) == 0 {
+        log.Printf("Failed to build notification: messageData is empty")
+        return nil
+    }
 
     // Parse the update to the order status model
     var order models.Orders
@@ -146,20 +206,34 @@ func buildNotificationPayloadOrder(messageData []byte, db *gorm.DB, blockChainCl
         log.Printf("Failed to unmarshal order update for notification: %v", err)
         return nil
     }
+    
+    log.Printf("Order with id %d created for customer %d", order.Id, order.Customer_ID)
 
-    notification := fmt.Sprintf(`{
-       "user_id": %d, 
-        "type": "sms", 
-        "title": "New Order Created", 
-        "payload": "Order with ID %d has been created.", 
-        "hyperlink": "https://tracking-status-frontend-edneicy3ca-ew.a.run.app/order/%d", 
-        "created_at": "` + time.Now().Format(time.RFC3339) + `" 
-    }`, order.Customer_ID, order.Id)
+    notification := &NotificationRequest{ 
+        UserId:     fmt.Sprintf("%d", order.Customer_ID), 
+        Type:       "sms",
+        Title:      "New Order Created",
+        Payload:    fmt.Sprintf("Order with ID %d has been created.", order.Id),
+        Hyperlink:  fmt.Sprintf("https://tracking-status-frontend-edneicy3ca-ew.a.run.app/order/%d", order.Id),
+        CreatedAt:  time.Now().Format(time.RFC3339),
+    }
 
-    return []byte(notification)
+    // Encrypt to protobuf
+    protoData, err := proto.Marshal(notification)
+    if err != nil {
+        log.Printf("Failed to marshal notification to protobuf: %v", err)
+        return nil
+    }
+
+    return protoData
 }
 
 func buildNotificationPayloadStatus(messageData []byte, db *gorm.DB, blockChainClient *blockchain.Client) []byte {
+
+    if messageData == nil || len(messageData) == 0 {
+        log.Printf("Failed to build notification: messageData is empty")
+        return nil
+    }
 
     // Parse the update to the order status model
     var order_update models.OrderStatusHistory
@@ -177,19 +251,35 @@ func buildNotificationPayloadStatus(messageData []byte, db *gorm.DB, blockChainC
         return nil
     }
 
-    notification := fmt.Sprintf(`{
-       "user_id": %d, 
-        "type": "sms", 
-        "title": "Order Status Update", 
-        "payload": %s, 
-        "hyperlink": "https://tracking-status-frontend-edneicy3ca-ew.a.run.app/order/%d", 
-        "created_at": "` + time.Now().Format(time.RFC3339) + `" 
-    }`, userID, order_update.Order_Status, order_update.Order_ID)
+    notification := &NotificationRequest{ 
+        UserId: fmt.Sprintf("%d", userID), 
+        Type: "sms", 
+        Title: "Order Status Update", 
+        Payload: fmt.Sprintf("Your order status has changed to: %s", order_update.Order_Status), 
+        Hyperlink: fmt.Sprintf("https://tracking-status-frontend-edneicy3ca-ew.a.run.app/order/%d", order_update.Order_ID),
+        CreatedAt: time.Now().Format(time.RFC3339),
+    }
 
-    return []byte(notification)
+    // Encrypt to protobuf
+    protoData, err := proto.Marshal(notification)
+    if err != nil {
+        log.Printf("Failed to marshal notification to protobuf: %v", err)
+        return nil
+    }
+
+    return protoData
 }
 
 func StartListener(ctx context.Context, client *pubsub.Client, sub *pubsub.Subscription, db *gorm.DB, blockChainClient *blockchain.Client) error {
+    
+    if client == nil {
+        return fmt.Errorf("pubsub client is nil")
+    }
+    
+    if sub == nil {
+        return fmt.Errorf("subscription is nil")
+    }
+    
 	// Handler
     orderStatusHistory := handlers.OrderStatusHistoryHandler{DB: db, Client: blockChainClient}
 	fmt.Println("Listening for order status update messages...")
@@ -235,6 +325,15 @@ func StartListener(ctx context.Context, client *pubsub.Client, sub *pubsub.Subsc
 }
 
 func StartListenerOrders(ctx context.Context, client *pubsub.Client, sub *pubsub.Subscription, db *gorm.DB, blockChainClient *blockchain.Client) error {
+    
+    if client == nil {
+        return fmt.Errorf("pubsub client is nil")
+    }
+    
+    if sub == nil {
+        return fmt.Errorf("subscription is nil")
+    }
+    
 	// Handler
     orderHandler := handlers.OrderHandler{DB: db, Client: blockChainClient}
 	fmt.Println("Listening for new order messages...")
