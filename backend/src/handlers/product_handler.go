@@ -15,6 +15,8 @@ type ProductHandler struct {
 	DB *gorm.DB
 }
 
+var GetProductByIDAPIFunc = GetProductByIDAPI
+
 // GetAllProducts retrieves all available products from the jumpseller API
 func (h *ProductHandler) GetAllProducts(c *gin.Context) {
 	client := &http.Client{}
@@ -49,7 +51,7 @@ func (h *ProductHandler) GetProductByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var product *models.Product
-	product, err := GetProductByIDAPI(id)
+	product, err := GetProductByIDAPIFunc(id)
 	if err != nil{
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
