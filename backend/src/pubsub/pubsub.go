@@ -17,6 +17,7 @@ import (
     "google.golang.org/protobuf/proto"
 	"cloud.google.com/go/pubsub"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/api/option"
 	"gorm.io/gorm"
 )
 
@@ -46,14 +47,29 @@ type PubSubClient interface {
 // Initializes pubsub client
 func StartPubSubClient(ctx context.Context, db *gorm.DB, blockChainClient *blockchain.Client) (*pubsub.Client, error) {
 
-    projectID := os.Getenv("PUBSUB_PROJECT")
-    
+    projectID := os.Getenv("PUBSUB_PROJECT") // Use MIPS project if set
+    credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+    log.Printf("Initializing Pub/Sub client for project: %s", projectID)
+    log.Printf("Using credentials path: %s", credentialsPath)
+
     if projectID == "" {
-        log.Printf("Failed to create Pub/Sub client: PUBSUB_PROJECT env var is empty")
-        return nil, fmt.Errorf("PUBSUB_PROJECT environment variable is not set")
+        projectID = "madeinportugal" // Fallback to default project
+        log.Printf("PUBSUB_PROJECT not set, falling back to default project: %s", projectID)
     }
 
-    client, err := pubsub.NewClient(ctx, projectID)
+    var client *pubsub.Client
+    var err error
+
+    // If credentials path is provided, use it
+    if credentialsPath != "" {
+        log.Printf("Creating Pub/Sub client with credentials from: %s", credentialsPath)
+        client, err = pubsub.NewClient(ctx, projectID, option.WithCredentialsFile(credentialsPath))
+    } else {
+        log.Printf("Creating Pub/Sub client with default credentials")
+        client, err = pubsub.NewClient(ctx, projectID)
+    }
+
     if err != nil {
         log.Printf("Failed to create Pub/Sub client: %v", err)
         return nil, err
@@ -153,18 +169,7 @@ func SubscribeClient(ctx context.Context, client *pubsub.Client, topicID string,
 }
 
 func PublishNotification(ctx context.Context, client *pubsub.Client, notification []byte) error {
-    
-    if client == nil {
-        log.Printf("Failed to publish notification: client is nil")
-        return fmt.Errorf("pubsub client is nil")
-    }
-    
-    if notification == nil || len(notification) == 0 {
-        log.Printf("Failed to publish notification: notification is empty")
-        return fmt.Errorf("notification payload is empty")
-    }
-    
-    topic := client.Topic("notifications")
+    topic := client.Topic("tracking-notifications")
 
     result := topic.Publish(ctx, &pubsub.Message{
         Data: notification,
@@ -370,5 +375,59 @@ func StartListenerOrders(ctx context.Context, client *pubsub.Client, sub *pubsub
 		}
 
 	}()
+	return nil
+}
+
+// ListAllTopics prints all available topics in the Pub/Sub project
+func ListAllTopics(ctx context.Context, client *pubsub.Client) error {
+	if client == nil {
+		return fmt.Errorf("pubsub client is nil")
+	}
+
+	it := client.Topics(ctx)
+
+	fmt.Println("\n========== Available Topics ==========")
+	count := 0
+	for {
+		topic, err := it.Next()
+		if err != nil {
+			break
+		}
+		count++
+		fmt.Printf("%d. %s\n", count, topic.ID())
+	}
+
+	if count == 0 {
+		fmt.Println("No topics found in the project")
+	}
+	fmt.Println("=========================================\n")
+
+	return nil
+}
+
+// ListAllSubscriptions prints all available subscriptions in the Pub/Sub project
+func ListAllSubscriptions(ctx context.Context, client *pubsub.Client) error {
+	if client == nil {
+		return fmt.Errorf("pubsub client is nil")
+	}
+
+	it := client.Subscriptions(ctx)
+
+	fmt.Println("\n========== Available Subscriptions ==========")
+	count := 0
+	for {
+		sub, err := it.Next()
+		if err != nil {
+			break
+		}
+		count++
+		fmt.Printf("%d. %s\n", count, sub.ID())
+	}
+
+	if count == 0 {
+		fmt.Println("No subscriptions found in the project")
+	}
+	fmt.Println("=============================================\n")
+
 	return nil
 }

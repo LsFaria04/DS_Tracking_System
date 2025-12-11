@@ -118,33 +118,41 @@ func main() {
 
 	
 	// Configure Pub/Sub client and subscriptions 
-    client, subs, err := configPubSubClient(db, blockChainClient, []string{"orders_status", "checkout_orders"}, []string{"order_status-sub", "checkout_orders-sub"})
+    client, subs, err := configPubSubClient(db, blockChainClient, []string{}, []string{}) // Empty topic and subscription IDs since they are not created yet by the checkout team
 
-	// Create notifications topic to send notifications whenever status updates occur
-	_, err = pubsub.CreateTopicWithID(ctx, client, "notifications")
 	if err != nil {
-		log.Printf("Error creating notifications topic: %v", err)
-	}
-
-    if err != nil {
         log.Printf("Error configuring PubSub: %v", err)
         // Continue without PubSub
         log.Printf("Continuing without PubSub functionality")
-    } else {
+    } else if client != nil {
+		// List all topics and subscriptions (for debugging)
+		pubsub.ListAllTopics(ctx, client)
+		pubsub.ListAllSubscriptions(ctx, client)
+
+		// Create notifications topic to send notifications whenever status updates occur
+		//_, err = pubsub.CreateTopicWithID(ctx, client, "tracking-notifications")  -  Notifications are already created
         defer client.Close() // Close client when main exits
-        err = pubsub.StartListener(ctx, client, subs[0], db, blockChainClient)
         
-        if err != nil {
-            log.Printf("Error starting PubSub listener for order status: %v", err)
-        } 
+        // Only start listeners if we have subscriptions
+        if len(subs) > 0 {
+            err = pubsub.StartListener(ctx, client, subs[0], db, blockChainClient)
+            if err != nil {
+                log.Printf("Error starting PubSub listener for order status: %v", err)
+            }
+        } else {
+            log.Printf("No subscriptions configured, skipping listeners")
+        }
+        
+        if len(subs) > 1 {
+            err = pubsub.StartListenerOrders(ctx, client, subs[1], db, blockChainClient)
+            if err != nil {
+                log.Printf("Error starting PubSub listener for checkout orders: %v", err)
+            }
+        }
 
-		err = pubsub.StartListenerOrders(ctx, client, subs[1], db, blockChainClient)
-		if err != nil {
-			log.Printf("Error starting PubSub listener for checkout orders: %v", err)
-		}
-
-		pubsub.TestOrdersPubSub()  // Uncomment to test order publishing
+        //pubsub.TestOrdersPubSub()  // Uncomment to test order publishing
     }
+	
 
 
 	router.Run(":8080") // listens on 0.0.0.0:8080 by default

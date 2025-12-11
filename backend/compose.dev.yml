@@ -55,6 +55,8 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       # Database
       DB_HOST: ${DB_HOST}
@@ -71,9 +73,13 @@ services:
       JUMPSELLER_BASE_URL: ${JUMPSELLER_BASE_URL}
       LOGIN_JUMPSELLER_API: ${LOGIN_JUMPSELLER_API}
       TOKEN_JUMPSELLER_API: ${TOKEN_JUMPSELLER_API}
-      # PubSub Emulator
-      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-      PUBSUB_PROJECT: madeinportugal
+      # Pub/Sub Configuration (use real GCP, not emulator)
+      # PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PUBSUB_PROJECT: ${PUBSUB_PROJECT:-ds-2526-mips}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/service-account-key.json}
+    volumes:
+      # Mount the credentials file from the backend folder
+      - ./service-account-key.json:/app/service-account-key.json:ro
     develop:
       watch:
         - action: sync

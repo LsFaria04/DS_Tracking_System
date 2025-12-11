@@ -36,6 +36,13 @@ resource "google_sql_user" "user" {
   password = var.db_password
 }
 
+# Grant Cloud Run default service account access to the secret
+resource "google_secret_manager_secret_iam_member" "cloud_run_access" {
+  secret_id = "pubsub-service-account-key"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+}
+
 # Cloud Run Service
 resource "google_cloud_run_v2_service" "default" {
   name     = var.service_name
@@ -109,11 +116,39 @@ resource "google_cloud_run_v2_service" "default" {
         value = var.token_jumpseller_api
       }
 
+      # Pub/Sub Configuration
+      env {
+        name  = "PUBSUB_PROJECT"
+        value = "ds-2526-mips"
+      }
+      env {
+        name  = "GOOGLE_APPLICATION_CREDENTIALS"
+        value = "/var/run/secrets/cloud.google.com/service-account-key.json"
+      }
+
+      # Volume mount for service account secret
+      volume_mounts {
+        name       = "gcp-secret"
+        mount_path = "/var/run/secrets/cloud.google.com"
+      }
+
       # Resource limits
       resources {
         limits = {
           cpu    = "1"
           memory = "512Mi"
+        }
+      }
+    }
+
+    # Volume for GCP service account secret from Secret Manager
+    volumes {
+      name = "gcp-secret"
+      secret {
+        secret = "pubsub-service-account-key"
+        items {
+          version = "latest"
+          path    = "service-account-key.json"
         }
       }
     }
