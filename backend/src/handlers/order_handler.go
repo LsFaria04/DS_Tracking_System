@@ -61,21 +61,19 @@ func (h *OrderHandler) GetAllOrders(c *gin.Context) {
 	var result *gorm.DB
 	if order_by == "oldest" {
 		result = h.DB.Order("created_at asc").
-		Preload("Products").
-		Preload("Updates", func(db *gorm.DB) *gorm.DB {
-			return db.Order("timestamp_history desc")
-		}).	
-		Find(&orders)
-	} else{
+			Preload("Products").
+			Preload("Updates", func(db *gorm.DB) *gorm.DB {
+				return db.Order("timestamp_history desc")
+			}).
+			Find(&orders)
+	} else {
 		result = h.DB.Order("created_at desc").
-		Preload("Products").
-		Preload("Updates", func(db *gorm.DB) *gorm.DB {
-        	return db.Order("timestamp_history desc")
-    	}).
-		Find(&orders)
+			Preload("Products").
+			Preload("Updates", func(db *gorm.DB) *gorm.DB {
+				return db.Order("timestamp_history desc")
+			}).
+			Find(&orders)
 	}
-
-	
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
@@ -224,7 +222,7 @@ func (h *OrderHandler) AddOrder(c *gin.Context) {
 
 }
 
-func (h *OrderHandler) UpdateOrder(c *gin.Context){
+func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 
 	//get the order update request
 	var input requestModels.UpdateOrderRequest
@@ -235,7 +233,7 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context){
 	}
 
 	var order *models.Orders
-	result := h.DB.First(&order,input.OrderID)
+	result := h.DB.First(&order, input.OrderID)
 	//check if there was an error with the database request
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -256,10 +254,10 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context){
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
-			}
+		}
 	}
 
-	if (order_update != nil) && ((order_update.Order_Status != "PROCESSING")){
+	if (order_update != nil) && (order_update.Order_Status != "PROCESSING") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot change an order that is already shipped"})
 		return
 	}
@@ -269,7 +267,6 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context){
 	order.Delivery_Longitude = input.DeliveryLongitude
 	estimate_time := utils.EstimateDeliveryTime(order.Seller_Latitude, order.Seller_Longitude, order.Delivery_Latitude, order.Delivery_Longitude, 30)
 	order.Delivery_Estimate = time.Now().Add(time.Duration(estimate_time * float64(time.Hour)))
-
 
 	result = h.DB.Save(&order)
 
@@ -286,4 +283,92 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context){
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Order Updated successfully"})
+}
+
+func (h *OrderHandler) CancelOrder(c *gin.Context) {
+	// Get the cancel order request
+	var input requestModels.CancelOrderRequest
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Input"})
+		return
+	}
+
+	// Fetch the order
+	var order *models.Orders
+	result := h.DB.First(&order, input.OrderID)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			message := fmt.Sprintf("Order with id %d not found", input.OrderID)
+			c.JSON(http.StatusNotFound, gin.H{"error": message})
+			return
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+	}
+
+	// Get the latest order status
+	var latestStatus *models.OrderStatusHistory
+	result = h.DB.Where("order_id = ?", order.Id).Order("timestamp_history desc").First(&latestStatus)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	// Check if order can be cancelled (only PROCESSING status allows cancellation)
+	if latestStatus != nil && latestStatus.Order_Status != "PROCESSING" {
+		c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("Cannot cancel order with status: %s", latestStatus.Order_Status)})
+		return
+	}
+
+	// Create a new order status history entry for cancellation
+	cancelledStatus := models.OrderStatusHistory{
+		Order_ID:          order.Id,
+		Order_Status:      "CANCELLED",
+		Timestamp_History: time.Now(),
+		Order_Location:    "SYSTEM",
+		Note:              input.Reason,
+	}
+
+	// Save the new status to the database
+	result = h.DB.Create(&cancelledStatus)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel order"})
+		return
+	}
+
+	// If blockchain client is available, store the cancellation in blockchain
+	if h.Client != nil {
+		auth := h.Client.Auth
+		ethClient := h.Client.EthClient
+		addr := os.Getenv("BLOCKCHAIN_CONTRACT_ADDRESS")
+		contract, err := blockchain.GetContractInstance(ethClient, addr)
+		if err != nil {
+			// Log but don't fail - blockchain is optional
+			fmt.Printf("Warning: Failed to get blockchain contract: %v\n", err)
+		} else {
+			// Hash the cancellation data
+			data := fmt.Sprintf("%d|%s|%s|%s",
+				cancelledStatus.Order_ID,
+				cancelledStatus.Order_Status,
+				cancelledStatus.Timestamp_History.Format(time.RFC3339),
+				cancelledStatus.Order_Location,
+			)
+			hash := sha256.Sum256([]byte(data))
+
+			// Store in blockchain (async to not block response)
+			go func() {
+				_, err := StoreUpdateHash(auth, contract, uint64(order.Id), hash)
+				if err != nil {
+					fmt.Printf("Warning: Failed to store cancellation in blockchain: %v\n", err)
+				}
+			}()
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Order cancelled successfully",
+		"order_id": order.Id,
+		"status":   "CANCELLED",
+	})
 }

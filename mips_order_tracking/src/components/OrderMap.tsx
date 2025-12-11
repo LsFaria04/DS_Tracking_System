@@ -71,7 +71,11 @@ export default function OrderMap({
 
     // Sort history by timestamp ascending (old -> new) so the route is built chronologically
     const sortedByTimeAsc = useMemo(() => 
-        [...orderHistory].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
+        [...orderHistory].sort((a, b) => {
+            const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return aTime - bTime;
+        }),
         [orderHistory]
     );
 
