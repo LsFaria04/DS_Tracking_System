@@ -146,7 +146,7 @@ func (h *OrderProductHandler) DeleteOrderProduct(c *gin.Context) {
 	}
 
 	if err := h.DB.Delete(&orderProduct).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete order product"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error":err.Error()})
 		return
 	}
 

@@ -4,6 +4,7 @@ import (
 	"app/requestModels"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 // setupMockDB creates a gorm DB backed by sqlmock
@@ -97,3 +99,188 @@ func TestVerifyOrder_ReturnsTransactionHashes(t *testing.T) {
 		t.Fatalf("expected verified true, got false: %+v", resp)
 	}
 }
+
+func TestVerifyOrder_DBError(t *testing.T) {
+	db, mock := setupMockDB(t)
+	h := &VerificationHandler{
+		DB:     db,
+		Client: &blockchain.Client{EthClient: &ethclient.Client{}},
+	}
+	r := gin.Default()
+	r.GET("/order/verify/:order_id", h.VerifyOrder)
+
+	mock.ExpectQuery(`SELECT .* FROM "order_status_history" WHERE .*`).
+		WithArgs("1").
+		WillReturnError(errors.New("db failure"))
+
+	req := httptest.NewRequest(http.MethodGet, "/order/verify/1", nil)
+	w := performRequest(r, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestVerifyOrder_NotFound(t *testing.T) {
+	db, mock := setupMockDB(t)
+	h := &VerificationHandler{
+		DB:     db,
+		Client: &blockchain.Client{EthClient: &ethclient.Client{}},
+	}
+	r := gin.Default()
+	r.GET("/order/verify/:order_id", h.VerifyOrder)
+
+	// Return empty result set
+	mock.ExpectQuery(`SELECT .* FROM "order_status_history" WHERE .*`).
+		WithArgs("999").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "order_id", "timestamp_history", "order_status", "order_location"}))
+
+	req := httptest.NewRequest(http.MethodGet, "/order/verify/999", nil)
+	w := performRequest(r, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestVerifyOrder_BlockchainHashError(t *testing.T) {
+	db, mock := setupMockDB(t)
+	h := &VerificationHandler{
+		DB:     db,
+		Client: &blockchain.Client{EthClient: &ethclient.Client{}},
+	}
+	r := gin.Default()
+	r.GET("/order/verify/:order_id", h.VerifyOrder)
+
+	ts := time.Now().UTC().Truncate(time.Second)
+	rows := sqlmock.NewRows([]string{
+		"id", "order_id", "timestamp_history", "order_status", "order_location",
+	}).AddRow(1, 1, ts, "PROCESSING", "Origin")
+	mock.ExpectQuery(`SELECT .* FROM "order_status_history" WHERE .*`).
+		WithArgs("1").
+		WillReturnRows(rows)
+
+	// Inject GetUpdateHashesFunc to return error
+	h.GetUpdateHashesFunc = func(
+		contract *blockchain.Blockchain,
+		orderIDBig *big.Int,
+	) ([][32]byte, error) {
+		return nil, errors.New("blockchain hash retrieval failed")
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/order/verify/1", nil)
+	w := performRequest(r, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestVerifyOrder_PartiallyVerified(t *testing.T) {
+	db, mock := setupMockDB(t)
+	h := &VerificationHandler{
+		DB:     db,
+		Client: &blockchain.Client{EthClient: &ethclient.Client{}},
+	}
+	r := gin.Default()
+	r.GET("/order/verify/:order_id", h.VerifyOrder)
+
+	ts := time.Now().UTC().Truncate(time.Second)
+	// Two updates in DB
+	rows := sqlmock.NewRows([]string{
+		"id", "order_id", "timestamp_history", "order_status", "order_location",
+	}).AddRow(1, 1, ts, "PROCESSING", "Origin").
+		AddRow(2, 1, ts.Add(time.Hour), "SHIPPED", "Warehouse")
+	mock.ExpectQuery(`SELECT .* FROM "order_status_history" WHERE .*`).
+		WithArgs("1").
+		WillReturnRows(rows)
+
+	// Only first hash matches
+	data1 := fmt.Sprintf("%d|%s|%s|%s", 1, "PROCESSING", ts.Format(time.RFC3339), "Origin")
+	hash1 := sha256.Sum256([]byte(data1))
+
+	h.GetUpdateHashesFunc = func(
+		contract *blockchain.Blockchain,
+		orderIDBig *big.Int,
+	) ([][32]byte, error) {
+		return [][32]byte{hash1}, nil // Only one hash, missing second
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/order/verify/1", nil)
+	w := performRequest(r, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp requestModels.VerificationResponse
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Equal(t, "PARTIALLY_VERIFIED", resp.Status)
+	assert.Equal(t, 1, resp.VerifiedUpdates)
+	assert.False(t, resp.Verified)
+}
+
+func TestVerifyOrder_NotVerified(t *testing.T) {
+	db, mock := setupMockDB(t)
+	h := &VerificationHandler{
+		DB:     db,
+		Client: &blockchain.Client{EthClient: &ethclient.Client{}},
+	}
+	r := gin.Default()
+	r.GET("/order/verify/:order_id", h.VerifyOrder)
+
+	ts := time.Now().UTC().Truncate(time.Second)
+	rows := sqlmock.NewRows([]string{
+		"id", "order_id", "timestamp_history", "order_status", "order_location",
+	}).AddRow(1, 1, ts, "PROCESSING", "Origin")
+	mock.ExpectQuery(`SELECT .* FROM "order_status_history" WHERE .*`).
+		WithArgs("1").
+		WillReturnRows(rows)
+
+	// Return empty hashes - nothing verified
+	h.GetUpdateHashesFunc = func(
+		contract *blockchain.Blockchain,
+		orderIDBig *big.Int,
+	) ([][32]byte, error) {
+		return [][32]byte{}, nil
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/order/verify/1", nil)
+	w := performRequest(r, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp requestModels.VerificationResponse
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Equal(t, "NOT_VERIFIED", resp.Status)
+	assert.Equal(t, 0, resp.VerifiedUpdates)
+}
+
+func TestVerifyOrder_ExtraHashes(t *testing.T) {
+	db, mock := setupMockDB(t)
+	h := &VerificationHandler{
+		DB:     db,
+		Client: &blockchain.Client{EthClient: &ethclient.Client{}},
+	}
+	r := gin.Default()
+	r.GET("/order/verify/:order_id", h.VerifyOrder)
+
+	ts := time.Now().UTC().Truncate(time.Second)
+	rows := sqlmock.NewRows([]string{
+		"id", "order_id", "timestamp_history", "order_status", "order_location",
+	}).AddRow(1, 1, ts, "PROCESSING", "Origin")
+	mock.ExpectQuery(`SELECT .* FROM "order_status_history" WHERE .*`).
+		WithArgs("1").
+		WillReturnRows(rows)
+
+	// Compute matching hash plus an extra one
+	data := fmt.Sprintf("%d|%s|%s|%s", 1, "PROCESSING", ts.Format(time.RFC3339), "Origin")
+	hash := sha256.Sum256([]byte(data))
+	extraHash := sha256.Sum256([]byte("extra"))
+
+	h.GetUpdateHashesFunc = func(
+		contract *blockchain.Blockchain,
+		orderIDBig *big.Int,
+	) ([][32]byte, error) {
+		return [][32]byte{hash, extraHash}, nil // More hashes than DB entries
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/order/verify/1", nil)
+	w := performRequest(r, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp requestModels.VerificationResponse
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Equal(t, "EXTRA_HASHES", resp.Status)
+}
+

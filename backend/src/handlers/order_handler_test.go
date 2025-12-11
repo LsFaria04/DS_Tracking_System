@@ -2,9 +2,11 @@
 package handlers
 
 import (
+
 	"app/requestModels"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -41,6 +44,27 @@ func performRequest(r *gin.Engine, req *http.Request) *httptest.ResponseRecorder
 
 // --- Tests ---
 
+func TestGetUserIDByOrderID_Success(t *testing.T) {
+    db, mock := setupMockDB(t)
+    mock.ExpectQuery(`SELECT \* FROM "orders" WHERE "orders"."id" = \$1 ORDER BY "orders"."id" LIMIT \$2`).
+        WithArgs(1, 1).
+        WillReturnRows(sqlmock.NewRows([]string{"id","customer_id"}).AddRow(1, 42))
+
+    id, err := GetUserIDByOrderID(db, 1)
+    assert.NoError(t, err)
+    assert.Equal(t, uint(42), id)
+}
+
+func TestGetUserIDByOrderID_NotFound(t *testing.T) {
+    db, mock := setupMockDB(t)
+    mock.ExpectQuery(`SELECT \* FROM "orders" WHERE "orders"."id" = \$1 ORDER BY "orders"."id" LIMIT \$2`).
+        WithArgs(999, 1).
+        WillReturnError(gorm.ErrRecordNotFound)
+
+    id, err := GetUserIDByOrderID(db, 999)
+    assert.Error(t, err)
+    assert.Equal(t, uint(0), id)
+}
 func TestGetOrderByID_NotFound(t *testing.T) {
 	db, mock := setupMockDB(t)
 	h := &OrderHandler{DB: db}
@@ -88,6 +112,119 @@ func TestGetOrderByID_Success(t *testing.T) {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
 }
+
+func TestAddOrder_DBCreateError(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.POST("/order/add", h.AddOrder)
+
+    // Expect transaction begin
+    mock.ExpectBegin()
+    // Fail on order insert
+    mock.ExpectExec(`INSERT INTO "orders"`).WillReturnError(errors.New("db error"))
+    mock.ExpectRollback()
+
+    payload := requestModels.AddOrderRequest{
+        CustomerId: 1,
+        DeliveryAddress: "Addr",
+        SellerId: 2,
+        SellerAddress: "Seller",
+        SellerLatitude: 41.1,
+        SellerLongitude: -8.6,
+        DeliveryLatitude: 41.15,
+        DeliveryLongitude: -8.61,
+        Products: []requestModels.OrderProductRequest{},
+    }
+    body, _ := json.Marshal(payload)
+
+    req := httptest.NewRequest(http.MethodPost, "/order/add", bytes.NewBuffer(body))
+    req.Header.Set("Content-Type", "application/json")
+    w := performRequest(r, req)
+
+    assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+
+
+
+func TestGetOrderByID_InternalError(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.GET("/order/:id", h.GetOrderByID)
+
+    mock.ExpectQuery(`SELECT \* FROM "orders" WHERE "orders"."id" = \$1 ORDER BY "orders"."id" LIMIT \$2`).
+        WithArgs("1", 1).
+        WillReturnError(errors.New("db failure"))
+
+    req := httptest.NewRequest(http.MethodGet, "/order/1", nil)
+    w := performRequest(r, req)
+
+    assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestGetAllOrders_Oldest(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.GET("/orders", h.GetAllOrders)
+
+    mock.ExpectQuery(`SELECT \* FROM "orders" ORDER BY created_at asc`).
+    WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(1))
+
+    mock.ExpectQuery(`SELECT \* FROM "order_products" WHERE "order_products"."order_id" = \$1`).
+    WithArgs(1).
+    WillReturnRows(sqlmock.NewRows([]string{"id","order_id"}).AddRow(1,1))
+
+
+    mock.ExpectQuery(`SELECT \* FROM "order_status_history" WHERE "order_status_history"."order_id" = \$1 ORDER BY timestamp_history desc`).
+    WithArgs(1).
+    WillReturnRows(sqlmock.NewRows([]string{"id","order_id","order_status","timestamp_history"}).
+        AddRow(1,1,"PROCESSING",time.Now()))
+
+
+    req := httptest.NewRequest(http.MethodGet, "/orders?order_by=oldest", nil)
+    w := performRequest(r, req)
+    assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestGetAllOrders_Newest(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.GET("/orders", h.GetAllOrders)
+
+    mock.ExpectQuery(`SELECT \* FROM "orders" ORDER BY created_at desc`).
+    WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+
+    mock.ExpectQuery(`SELECT \* FROM "order_products" WHERE "order_products"."order_id" = \$1`).
+    WithArgs(1).
+    WillReturnRows(sqlmock.NewRows([]string{"id","order_id"}).AddRow(1,1))
+
+    mock.ExpectQuery(`SELECT \* FROM "order_status_history" WHERE "order_status_history"."order_id" = \$1 ORDER BY timestamp_history desc`).
+    WithArgs(1).
+    WillReturnRows(sqlmock.NewRows([]string{"id","order_id","order_status","timestamp_history"}).
+        AddRow(1,1,"PROCESSING",time.Now()))
+
+    req := httptest.NewRequest(http.MethodGet, "/orders?order_by=newest", nil)
+    w := performRequest(r, req)
+    assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestGetAllOrders_Error(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.GET("/orders", h.GetAllOrders)
+
+    mock.ExpectQuery(`SELECT \* FROM "orders"`).WillReturnError(errors.New("db fail"))
+
+    req := httptest.NewRequest(http.MethodGet, "/orders", nil)
+    w := performRequest(r, req)
+    assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
 
 func TestAddOrder_BadInput(t *testing.T) {
 	db, _ := setupMockDB(t)
@@ -272,6 +409,109 @@ func TestCancelOrder_NotProcessing(t *testing.T) {
 		t.Fatalf("expected error message about SHIPPED status, got: %s", response["error"])
 	}
 }
+
+func TestUpdateOrder_DBErrorOnLookup(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.POST("/order/update", h.UpdateOrder)
+
+    mock.ExpectQuery(`SELECT \* FROM "orders" WHERE "orders"."id" = \$1 ORDER BY "orders"."id" LIMIT \$2`).
+        WithArgs(1,1).
+        WillReturnError(errors.New("db fail"))
+
+    payload := requestModels.UpdateOrderRequest{OrderID: 1}
+    body,_ := json.Marshal(payload)
+
+    req := httptest.NewRequest(http.MethodPost,"/order/update",bytes.NewBuffer(body))
+    req.Header.Set("Content-Type","application/json")
+    w := performRequest(r,req)
+
+    assert.Equal(t,http.StatusInternalServerError,w.Code)
+}
+
+func TestUpdateOrder_StatusHistoryError(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.POST("/order/update", h.UpdateOrder)
+
+    // Order exists
+    mock.ExpectQuery(`SELECT \* FROM "orders" WHERE "orders"."id" = \$1 ORDER BY "orders"."id" LIMIT \$2`).
+        WithArgs(1,1).
+        WillReturnRows(sqlmock.NewRows([]string{"id","delivery_address","delivery_latitude","delivery_longitude","seller_latitude","seller_longitude"}).
+            AddRow(1,"Addr",41.1,-8.6,41.2,-8.5))
+
+    // Status history query fails
+    mock.ExpectQuery(`SELECT \* FROM "order_status_history" WHERE order_id = \$1 ORDER BY timestamp_history desc,"order_status_history"."id" LIMIT \$2`).
+        WithArgs(1,1).
+        WillReturnError(errors.New("db fail"))
+
+    payload := requestModels.UpdateOrderRequest{OrderID: 1}
+    body,_ := json.Marshal(payload)
+
+    req := httptest.NewRequest(http.MethodPost,"/order/update",bytes.NewBuffer(body))
+    req.Header.Set("Content-Type","application/json")
+    w := performRequest(r,req)
+
+    assert.Equal(t,http.StatusInternalServerError,w.Code)
+}
+
+func TestUpdateOrder_AlreadyShipped(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.POST("/order/update", h.UpdateOrder)
+
+    mock.ExpectQuery(`SELECT \* FROM "orders" WHERE "orders"."id" = \$1 ORDER BY "orders"."id" LIMIT \$2`).
+        WithArgs(1,1).
+        WillReturnRows(sqlmock.NewRows([]string{"id","delivery_address","delivery_latitude","delivery_longitude","seller_latitude","seller_longitude"}).
+            AddRow(1,"Addr",41.1,-8.6,41.2,-8.5))
+
+    mock.ExpectQuery(`SELECT \* FROM "order_status_history" WHERE order_id = \$1 ORDER BY timestamp_history desc,"order_status_history"."id" LIMIT \$2`).
+        WithArgs(1,1).
+        WillReturnRows(sqlmock.NewRows([]string{"id","order_id","order_status","timestamp_history"}).
+            AddRow(1,1,"SHIPPED",time.Now()))
+
+    payload := requestModels.UpdateOrderRequest{OrderID: 1}
+    body,_ := json.Marshal(payload)
+
+    req := httptest.NewRequest(http.MethodPost,"/order/update",bytes.NewBuffer(body))
+    req.Header.Set("Content-Type","application/json")
+    w := performRequest(r,req)
+
+    assert.Equal(t,http.StatusForbidden,w.Code)
+}
+
+func TestUpdateOrder_SaveError(t *testing.T) {
+    db, mock := setupMockDB(t)
+    h := &OrderHandler{DB: db}
+    r := gin.Default()
+    r.POST("/order/update", h.UpdateOrder)
+
+    mock.ExpectQuery(`SELECT \* FROM "orders" WHERE "orders"."id" = \$1 ORDER BY "orders"."id" LIMIT \$2`).
+        WithArgs(1,1).
+        WillReturnRows(sqlmock.NewRows([]string{"id","delivery_address","delivery_latitude","delivery_longitude","seller_latitude","seller_longitude"}).
+            AddRow(1,"Addr",41.1,-8.6,41.2,-8.5))
+
+    mock.ExpectQuery(`SELECT \* FROM "order_status_history" WHERE order_id = \$1 ORDER BY timestamp_history desc,"order_status_history"."id" LIMIT \$2`).
+        WithArgs(1,1).
+        WillReturnRows(sqlmock.NewRows([]string{"id","order_id","order_status","timestamp_history"}).
+            AddRow(1,1,"PROCESSING",time.Now()))
+
+    mock.ExpectExec(`UPDATE "orders"`).WillReturnError(errors.New("update fail"))
+
+    payload := requestModels.UpdateOrderRequest{OrderID: 1, DeliveryAddress: "New"}
+    body,_ := json.Marshal(payload)
+
+    req := httptest.NewRequest(http.MethodPost,"/order/update",bytes.NewBuffer(body))
+    req.Header.Set("Content-Type","application/json")
+    w := performRequest(r,req)
+
+    assert.Equal(t,http.StatusInternalServerError,w.Code)
+}
+
+
 
 func TestCancelOrder_Success(t *testing.T) {
 	db, mock := setupMockDB(t)
