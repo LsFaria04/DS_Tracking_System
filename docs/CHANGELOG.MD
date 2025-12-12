@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## Sprint 3
+
+In this sprint, the main priority was integrating the service with the remaining platform components and improving the overall testing strategy. This included Pub/Sub integration with both the notifications service and the checkout service, as well as aligning the service’s visual design with the overall website theme. Unit test coverage was also increased to ensure that every component behaves as expected. Additionally, a small feature was introduced that allows users to cancel their order while it is still in the processing phase.
+
+Focusing first on the visual improvements, all components and pages of the service were updated to match the website’s overall design language. The changes can be seen in the images provided.
+
+![sprint3](Images/Changelog/sprint%203/visuals_order_page.png)
+
+![sprint3](Images/Changelog/sprint%203/visuals_order_carbon.png)
+
+![sprint3](Images/Changelog/sprint%203/visuals_tracking_history.png)
+
+Users can now cancel their orders while they are still being processed.
+
+![sprint3](Images/Changelog/sprint%203/cancel.png)
+
+To prevent accidental cancellations, a confirmation modal appears after the user clicks “Cancel” to ensure they truly intend to cancel the order.
+
+![sprint3](Images/Changelog/sprint%203/cancel_modal.png)
+
+As mentioned in the introduction, the service is now integrated with both the checkout and notifications services. However, these changes are not immediately visible in the user interface.
+
+
 ## Sprint 2
 
 In this sprint, we introduced several new features to enhance the user experience on the orders page. First, the service is now accessible directly from the landing page once the user is authenticated.
