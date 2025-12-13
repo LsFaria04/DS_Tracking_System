@@ -9,7 +9,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <div>
+      <div className="mips-tracking-root">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/order/:id" element={<OrderTrackingPage />} />
