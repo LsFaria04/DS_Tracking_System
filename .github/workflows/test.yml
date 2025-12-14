@@ -15,7 +15,7 @@ on:
 jobs:
   lint:
     name: Run Go Linter
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -35,7 +35,7 @@ jobs:
 
   test:
     name: Run Go Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: lint
 
     steps:
