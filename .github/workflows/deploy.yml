@@ -14,7 +14,7 @@ jobs:
   # Run all tests first
   test:
     name: Run All Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout code
@@ -36,7 +36,7 @@ jobs:
   # Build Docker images
   build-docker:
     name: Build Docker Images
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: test  # Only build if tests pass
 
     steps:
