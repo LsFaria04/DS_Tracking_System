@@ -1,5 +1,9 @@
 # Order Tracking System
 
+**Final grade: 18.9**
+
+**This project was part of the MadeinPortugal.store project.**
+
 Backend developed with Go, frontend with React (v18.0.0), deployed on Google Cloud Platform.
 
 The main development milestones and changes are reported in the [changelog](docs/CHANGELOG.MD) file.
